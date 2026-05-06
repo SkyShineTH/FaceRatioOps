@@ -52,6 +52,7 @@ JSON Response + Structured Logs + Health Checks
 
 ```text
 GET  /health
+GET  /model-info
 GET  /model/info
 POST /analyze
 ```
@@ -139,7 +140,7 @@ In a second terminal, call the operational endpoints and `/analyze`:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/health
-Invoke-RestMethod http://127.0.0.1:8000/model/info
+Invoke-RestMethod http://127.0.0.1:8000/model-info
 $ImagePath = "C:\path\to\single-face.jpg"
 curl.exe -s -F "file=@$ImagePath" http://127.0.0.1:8000/analyze
 ```
@@ -198,7 +199,8 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 ## Operations Notes
 
 - `/health` returns app name, version, environment, status, and timestamp
-- `/model/info` returns inference backend metadata
+- `/model-info` returns inference backend metadata, technical capabilities, and safety limitations
+- `/model/info` remains available as a compatibility route
 - `.env.example` documents safe non-secret defaults
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
