@@ -19,6 +19,9 @@ class ModelInfo(BaseModel):
 
 class ModelInfoResponse(BaseModel):
     model: ModelInfo
+    inference_enabled: bool
+    capabilities: list[str]
+    limitations: list[str]
 
 
 class FaceRatios(BaseModel):

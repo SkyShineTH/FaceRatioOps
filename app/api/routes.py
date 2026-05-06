@@ -9,6 +9,7 @@ from app.core.config import get_settings
 from app.inference.landmarks import (
     MODEL_NAME,
     MODEL_TASK,
+    MODEL_VERSION_UNAVAILABLE,
     ImageTooLargeError,
     LandmarkDetectorUnavailable,
     detect_face_landmarks,
@@ -27,6 +28,14 @@ from app.inference.schemas import (
 router = APIRouter()
 logger = logging.getLogger("faceratioops.api")
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MODEL_CAPABILITIES = ["face_landmark_detection", "geometric_ratio_calculation"]
+MODEL_LIMITATIONS = [
+    "no_face_recognition",
+    "no_identity_matching",
+    "no_demographic_prediction",
+    "no_beauty_or_attractiveness_scoring",
+    "no_medical_or_cosmetic_advice",
+]
 HTTP_413_CONTENT_TOO_LARGE = 413
 UNSUPPORTED_IMAGE_DETAIL = "Unsupported upload type. Upload a JPEG, PNG, or WebP image using multipart field 'file'."
 EMPTY_IMAGE_DETAIL = "Image upload is empty. Upload a non-empty JPEG, PNG, or WebP image."
@@ -48,14 +57,19 @@ def health() -> HealthResponse:
     )
 
 
+@router.get("/model-info", response_model=ModelInfoResponse)
 @router.get("/model/info", response_model=ModelInfoResponse)
 def model_info() -> ModelInfoResponse:
+    model_version = get_mediapipe_version()
     return ModelInfoResponse(
         model=ModelInfo(
             name=MODEL_NAME,
-            version=get_mediapipe_version(),
+            version=model_version,
             task=MODEL_TASK,
-        )
+        ),
+        inference_enabled=model_version != MODEL_VERSION_UNAVAILABLE,
+        capabilities=MODEL_CAPABILITIES,
+        limitations=MODEL_LIMITATIONS,
     )
 
 
