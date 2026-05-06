@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system app \
     && useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app
@@ -17,6 +17,9 @@ COPY app ./app
 
 RUN python -m pip install --upgrade pip \
     && python -m pip install ".[inference]"
+
+ENV MPLCONFIGDIR=/tmp/matplotlib \
+    XDG_CACHE_HOME=/tmp/.cache
 
 USER app
 

@@ -22,7 +22,7 @@ Uploaded images are processed in memory and are not persisted by the API.
 ## Architecture
 
 ```text
-Client / Postman / Web UI
+Client / Postman / curl
         |
         v
 FastAPI Inference API
@@ -40,7 +40,7 @@ JSON Response + Structured Logs + Health Checks
 ## Tech Stack
 
 - Backend: FastAPI
-- Inference: MediaPipe Face Mesh adapter
+- Inference: MediaPipe Face Mesh adapter through the `inference` extra
 - Image processing: Pillow, NumPy
 - Validation: Pydantic
 - Testing: pytest
@@ -65,7 +65,7 @@ POST /analyze
   "face_detected": true,
   "model": {
     "name": "mediapipe-face-mesh",
-    "version": "optional-runtime",
+    "version": "0.10.x",
     "task": "facial_landmark_detection"
   },
   "ratios": {
@@ -77,7 +77,8 @@ POST /analyze
   },
   "quality": {
     "warnings": [],
-    "confidence": 1.0
+    "message": null,
+    "confidence": null
   }
 }
 ```
@@ -99,6 +100,14 @@ Install the optional MediaPipe inference backend when you want `/analyze` to pro
 python -m pip install -e ".[inference]"
 ```
 
+The `inference` extra pins a MediaPipe release that includes the `mp.solutions.face_mesh` API used by this adapter.
+
+For one local environment with both development tools and real-image inference:
+
+```powershell
+python -m pip install -e ".[dev,inference]"
+```
+
 Run the API:
 
 ```powershell
@@ -110,6 +119,47 @@ Open:
 ```text
 http://127.0.0.1:8000/health
 http://127.0.0.1:8000/docs
+```
+
+## Manual Real-Image Verification
+
+Use a local JPEG, PNG, or WebP image with exactly one visible face. Do not commit real face images to the repository.
+
+Run the API locally with MediaPipe installed:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev,inference]"
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+In a second terminal, call the operational endpoints and `/analyze`:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
+Invoke-RestMethod http://127.0.0.1:8000/model/info
+$ImagePath = "C:\path\to\single-face.jpg"
+curl.exe -s -F "file=@$ImagePath" http://127.0.0.1:8000/analyze
+```
+
+Expected technical outcomes:
+
+- A readable image with exactly one visible face returns `face_detected: true`, MediaPipe model metadata, geometric ratios, and no judgmental scoring.
+- A readable image with no detectable face returns `face_detected: false`, `face_not_detected`, and a technical quality message.
+- A readable image with multiple visible faces returns `face_detected: false`, `multiple_faces_detected`, and a message asking for exactly one visible face.
+- Unsupported, invalid, empty, or oversized uploads return clear 400 or 413 error details.
+
+Equivalent Docker flow:
+
+```powershell
+docker build -t faceratioops:local .
+docker run --rm -d --name faceratioops-api -p 8000:8000 faceratioops:local
+Invoke-RestMethod http://127.0.0.1:8000/health
+$ImagePath = "C:\path\to\single-face.jpg"
+curl.exe -s -F "file=@$ImagePath" http://127.0.0.1:8000/analyze
+docker stop faceratioops-api
 ```
 
 ## Docker Workflow
@@ -135,6 +185,8 @@ The GitHub Actions workflow runs on push and pull request to `main`:
 - run `ruff check .`
 - run `pytest`
 - build the Docker image
+
+Unit tests are deterministic and do not require real face images or MediaPipe downloads. The inference adapter tests use generated in-memory raster images and a fake MediaPipe module to verify the adapter contract.
 
 ## Privacy and Safety Boundaries
 

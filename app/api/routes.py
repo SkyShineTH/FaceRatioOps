@@ -6,7 +6,14 @@ from uuid import uuid4
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from app.core.config import get_settings
-from app.inference.landmarks import ImageTooLargeError, LandmarkDetectorUnavailable, detect_face_landmarks
+from app.inference.landmarks import (
+    MODEL_NAME,
+    MODEL_TASK,
+    ImageTooLargeError,
+    LandmarkDetectorUnavailable,
+    detect_face_landmarks,
+    get_mediapipe_version,
+)
 from app.inference.ratios import calculate_face_ratios
 from app.inference.schemas import (
     AnalysisResponse,
@@ -21,6 +28,12 @@ router = APIRouter()
 logger = logging.getLogger("faceratioops.api")
 SUPPORTED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 HTTP_413_CONTENT_TOO_LARGE = 413
+UNSUPPORTED_IMAGE_DETAIL = "Unsupported upload type. Upload a JPEG, PNG, or WebP image using multipart field 'file'."
+EMPTY_IMAGE_DETAIL = "Image upload is empty. Upload a non-empty JPEG, PNG, or WebP image."
+INFERENCE_UNAVAILABLE_DETAIL = (
+    "Face landmark inference backend is unavailable. Install MediaPipe with "
+    "`python -m pip install -e \".[inference]\"` or run the Docker image."
+)
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -39,9 +52,9 @@ def health() -> HealthResponse:
 def model_info() -> ModelInfoResponse:
     return ModelInfoResponse(
         model=ModelInfo(
-            name="mediapipe-face-mesh",
-            version="optional-runtime",
-            task="facial_landmark_detection",
+            name=MODEL_NAME,
+            version=get_mediapipe_version(),
+            task=MODEL_TASK,
         )
     )
 
@@ -66,7 +79,7 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only JPEG, PNG, and WebP image uploads are supported.",
+            detail=UNSUPPORTED_IMAGE_DETAIL,
         )
 
     image_bytes = await file.read(settings.max_upload_bytes + 1)
@@ -77,11 +90,14 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
             "rejected upload above size limit",
             extra={"_request_id": request_id, "_size_bytes": size_bytes},
         )
-        raise HTTPException(status_code=HTTP_413_CONTENT_TOO_LARGE, detail="Image exceeds size limit.")
+        raise HTTPException(
+            status_code=HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"Image exceeds the configured upload limit of {settings.max_upload_bytes} bytes.",
+        )
 
     if size_bytes == 0:
         logger.info("rejected empty upload", extra={"_request_id": request_id})
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image upload is empty.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=EMPTY_IMAGE_DETAIL)
 
     logger.info(
         "received analysis request",
@@ -101,11 +117,14 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
         )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Face landmark backend is unavailable. Install the inference extras to enable analysis.",
+            detail=INFERENCE_UNAVAILABLE_DETAIL,
         ) from exc
     except ImageTooLargeError as exc:
         logger.info("decoded image exceeds size limit", extra={"_request_id": request_id})
-        raise HTTPException(status_code=HTTP_413_CONTENT_TOO_LARGE, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=HTTP_413_CONTENT_TOO_LARGE,
+            detail=f"{exc} Configured pixel limit is {settings.max_image_pixels} pixels.",
+        ) from exc
     except ValueError as exc:
         logger.info("invalid image upload", extra={"_request_id": request_id, "_reason": str(exc)})
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -127,7 +146,7 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
 
     return AnalysisResponse(
         face_detected=detection.face_detected,
-        model=ModelInfo(name=detection.model_name, version=detection.model_version, task="facial_landmark_detection"),
+        model=ModelInfo(name=detection.model_name, version=detection.model_version, task=MODEL_TASK),
         ratios=ratios,
-        quality=QualityReport(warnings=warnings, confidence=detection.confidence),
+        quality=QualityReport(warnings=warnings, message=detection.message, confidence=detection.confidence),
     )

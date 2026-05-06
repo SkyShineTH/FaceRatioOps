@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "FaceRatioOps"
-    app_version: str = "0.1.0"
+    app_version: str = "0.2.0"
     environment: str = "development"
     log_level: str = "INFO"
     max_upload_bytes: int = Field(default=5_242_880, description="Maximum upload size in bytes.")

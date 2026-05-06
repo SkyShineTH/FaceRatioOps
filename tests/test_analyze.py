@@ -45,14 +45,16 @@ def test_analyze_rejects_unsupported_content_type() -> None:
     response = client.post("/analyze", files={"file": ("face.svg", b"<svg />", "image/svg+xml")})
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Only JPEG, PNG, and WebP image uploads are supported."
+    assert response.json()["detail"] == (
+        "Unsupported upload type. Upload a JPEG, PNG, or WebP image using multipart field 'file'."
+    )
 
 
 def test_analyze_rejects_empty_image_upload() -> None:
     response = client.post("/analyze", files={"file": ("face.jpg", b"", "image/jpeg")})
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Image upload is empty."
+    assert response.json()["detail"] == "Image upload is empty. Upload a non-empty JPEG, PNG, or WebP image."
 
 
 def test_analyze_rejects_upload_above_size_limit(monkeypatch) -> None:
@@ -65,7 +67,7 @@ def test_analyze_rejects_upload_above_size_limit(monkeypatch) -> None:
     response = client.post("/analyze", files={"file": ("face.jpg", b"x" * 9, "image/jpeg")})
 
     assert response.status_code == 413
-    assert response.json()["detail"] == "Image exceeds size limit."
+    assert response.json()["detail"] == "Image exceeds the configured upload limit of 8 bytes."
 
 
 def test_analyze_returns_ratios_for_single_detected_face(monkeypatch) -> None:
@@ -89,7 +91,7 @@ def test_analyze_returns_ratios_for_single_detected_face(monkeypatch) -> None:
     assert body["model"]["name"] == "mediapipe-face-mesh"
     assert body["model"]["version"] == "test-double"
     assert body["ratios"]["face_width_to_height"] == 0.75
-    assert body["quality"] == {"warnings": [], "confidence": 0.98}
+    assert body["quality"] == {"warnings": [], "message": None, "confidence": 0.98}
 
 
 def test_analyze_returns_quality_warning_when_face_not_detected(monkeypatch) -> None:
@@ -101,6 +103,7 @@ def test_analyze_returns_quality_warning_when_face_not_detected(monkeypatch) -> 
             landmarks=[],
             confidence=0.0,
             warnings=["face_not_detected"],
+            message="No face landmarks were detected. Upload a clear image with exactly one visible face.",
         ),
     )
 
@@ -110,19 +113,49 @@ def test_analyze_returns_quality_warning_when_face_not_detected(monkeypatch) -> 
     body = response.json()
     assert body["face_detected"] is False
     assert body["ratios"] is None
-    assert body["quality"] == {"warnings": ["face_not_detected"], "confidence": 0.0}
+    assert body["quality"] == {
+        "warnings": ["face_not_detected"],
+        "message": "No face landmarks were detected. Upload a clear image with exactly one visible face.",
+        "confidence": 0.0,
+    }
+
+
+def test_analyze_returns_quality_warning_when_multiple_faces_detected(monkeypatch) -> None:
+    monkeypatch.setattr(
+        routes,
+        "detect_face_landmarks",
+        lambda image_bytes: LandmarkDetection(
+            face_detected=False,
+            landmarks=[],
+            confidence=None,
+            warnings=["multiple_faces_detected"],
+            message="Multiple faces were detected. Upload an image with exactly one visible face.",
+        ),
+    )
+
+    response = client.post("/analyze", files={"file": ("face.jpg", b"image-bytes", "image/jpeg")})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["face_detected"] is False
+    assert body["ratios"] is None
+    assert body["quality"] == {
+        "warnings": ["multiple_faces_detected"],
+        "message": "Multiple faces were detected. Upload an image with exactly one visible face.",
+        "confidence": None,
+    }
 
 
 def test_analyze_maps_invalid_images_to_bad_request(monkeypatch) -> None:
     def raise_invalid_image(image_bytes: bytes) -> None:
-        raise ValueError("Invalid image upload.")
+        raise ValueError("Invalid image upload. Upload a readable JPEG, PNG, or WebP image.")
 
     monkeypatch.setattr(routes, "detect_face_landmarks", raise_invalid_image)
 
     response = client.post("/analyze", files={"file": ("face.jpg", b"not-an-image", "image/jpeg")})
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Invalid image upload."
+    assert response.json()["detail"] == "Invalid image upload. Upload a readable JPEG, PNG, or WebP image."
 
 
 def test_analyze_maps_decoded_pixel_limit_to_request_entity_too_large(monkeypatch) -> None:
@@ -134,7 +167,7 @@ def test_analyze_maps_decoded_pixel_limit_to_request_entity_too_large(monkeypatc
     response = client.post("/analyze", files={"file": ("face.jpg", b"image-bytes", "image/jpeg")})
 
     assert response.status_code == 413
-    assert response.json()["detail"] == "Image exceeds decoded pixel limit."
+    assert response.json()["detail"] == "Image exceeds decoded pixel limit. Configured pixel limit is 12000000 pixels."
 
 
 def test_analyze_maps_missing_inference_backend_to_service_unavailable(monkeypatch) -> None:
@@ -147,5 +180,6 @@ def test_analyze_maps_missing_inference_backend_to_service_unavailable(monkeypat
 
     assert response.status_code == 503
     assert response.json()["detail"] == (
-        "Face landmark backend is unavailable. Install the inference extras to enable analysis."
+        "Face landmark inference backend is unavailable. Install MediaPipe with "
+        '`python -m pip install -e ".[inference]"` or run the Docker image.'
     )

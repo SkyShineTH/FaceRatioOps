@@ -31,6 +31,7 @@ class FaceRatios(BaseModel):
 
 class QualityReport(BaseModel):
     warnings: list[str]
+    message: str | None = None
     confidence: float | None = Field(default=None, ge=0, le=1)
 
 
