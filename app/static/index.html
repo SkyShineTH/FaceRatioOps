@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FaceRatioOps Workbench</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Privacy-first inference workbench</p>
+          <h1 id="page-title">FaceRatioOps</h1>
+          <p class="lede">
+            Upload one local face image to inspect landmark detection, technical geometric ratios, and quality warnings from the API.
+          </p>
+        </div>
+        <div class="ops-strip" aria-label="Operational endpoints">
+          <a href="/health">/health</a>
+          <a href="/model-info">/model-info</a>
+          <a href="/metrics">/metrics</a>
+          <a href="/docs">/docs</a>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Analysis workflow">
+        <div class="upload-panel">
+          <div class="panel-heading">
+            <span class="step">01</span>
+            <div>
+              <h2>Input</h2>
+              <p>JPEG, PNG, or WebP. Processed in memory by the API.</p>
+            </div>
+          </div>
+
+          <label class="dropzone" for="image-input">
+            <input id="image-input" type="file" accept="image/jpeg,image/png,image/webp" />
+            <span class="dropzone-title">Choose local image</span>
+            <span id="file-meta" class="dropzone-meta">No file selected</span>
+          </label>
+
+          <div class="preview-frame" aria-live="polite">
+            <img id="preview-image" alt="" hidden />
+            <canvas id="overlay-canvas" aria-hidden="true"></canvas>
+            <div id="preview-empty" class="preview-empty">
+              <span>Local preview appears here</span>
+            </div>
+          </div>
+          <p id="overlay-caption" class="overlay-caption">
+            Overlay appears after a detected face returns landmark-derived measurement geometry.
+          </p>
+
+          <button id="analyze-button" class="analyze-button" type="button" disabled>
+            Analyze geometry
+          </button>
+        </div>
+
+        <div class="result-panel">
+          <div class="panel-heading">
+            <span class="step">02</span>
+            <div>
+              <h2>Geometry analysis result</h2>
+              <p>Geometry measurements, model metadata, and technical warnings only.</p>
+            </div>
+          </div>
+
+          <div id="status-banner" class="status-banner idle" role="status">
+            Select an image to start the workflow.
+          </div>
+
+          <div class="result-grid">
+            <section class="result-section" aria-labelledby="ratios-title">
+              <h3 id="ratios-title">Geometric ratios</h3>
+              <dl id="ratio-list" class="ratio-list">
+                <div>
+                  <dt>Awaiting analysis</dt>
+                  <dd>-</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="result-section" aria-labelledby="quality-title">
+              <h3 id="quality-title">Quality warnings</h3>
+              <dl id="quality-list" class="quality-list">
+                <div>
+                  <dt>Warnings</dt>
+                  <dd>None yet</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+
+          <section class="result-section model-section" aria-labelledby="model-title">
+            <h3 id="model-title">Model metadata</h3>
+            <dl id="model-list" class="model-list">
+              <div>
+                <dt>Name</dt>
+                <dd>-</dd>
+              </div>
+              <div>
+                <dt>Version</dt>
+                <dd>-</dd>
+              </div>
+              <div>
+                <dt>Task</dt>
+                <dd>-</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="result-section model-section" aria-labelledby="overlay-title">
+            <h3 id="overlay-title">Explainability overlay</h3>
+            <dl id="overlay-list" class="model-list">
+              <div>
+                <dt>Detected face area</dt>
+                <dd>-</dd>
+              </div>
+              <div>
+                <dt>Measurement segments</dt>
+                <dd>-</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+      </section>
+
+      <section class="safety-band" aria-label="Safety boundaries">
+        <p>
+          This workbench does not perform identity matching, attractiveness scoring, demographic prediction, health inference, medical advice, or cosmetic recommendations.
+        </p>
+        <p>
+          Image data is selected locally, submitted to the API for analysis, and is not permanently stored by FaceRatioOps.
+        </p>
+      </section>
+    </main>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

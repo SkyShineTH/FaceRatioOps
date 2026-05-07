@@ -91,6 +91,19 @@ def test_analyze_returns_ratios_for_single_detected_face(monkeypatch) -> None:
     assert body["model"]["name"] == "mediapipe-face-mesh"
     assert body["model"]["version"] == "test-double"
     assert body["ratios"]["face_width_to_height"] == 0.75
+    assert body["visualization"]["bounding_box"] == {
+        "x_min": 0.0,
+        "y_min": 0.0,
+        "x_max": 0.8,
+        "y_max": 0.9,
+    }
+    assert [segment["name"] for segment in body["visualization"]["measurement_segments"]] == [
+        "face_width",
+        "face_top_to_chin",
+        "eye_distance",
+        "nose_width",
+        "mouth_width",
+    ]
     assert body["quality"] == {"warnings": [], "message": None, "confidence": 0.98}
 
 
@@ -113,6 +126,7 @@ def test_analyze_returns_quality_warning_when_face_not_detected(monkeypatch) -> 
     body = response.json()
     assert body["face_detected"] is False
     assert body["ratios"] is None
+    assert body["visualization"] is None
     assert body["quality"] == {
         "warnings": ["face_not_detected"],
         "message": "No face landmarks were detected. Upload a clear image with exactly one visible face.",

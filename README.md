@@ -9,6 +9,7 @@ FaceRatioOps analyzes facial landmarks from uploaded images and calculates geome
 - Accepts an uploaded JPEG, PNG, or WebP face image through a FastAPI endpoint
 - Detects facial landmarks using a MediaPipe-based inference adapter
 - Calculates geometric ratios such as face width to height and eye distance to face width
+- Returns landmark-derived visualization geometry for explainability overlays
 - Returns JSON results with model metadata and quality warnings
 - Provides health and model info endpoints for operations
 - Uses structured JSON logs without logging uploaded image data
@@ -18,6 +19,10 @@ FaceRatioOps analyzes facial landmarks from uploaded images and calculates geome
 FaceRatioOps does not perform face recognition, identity matching, beauty scoring, age prediction, gender prediction, race or ethnicity prediction, personality inference, medical diagnosis, cosmetic advice, or surgery recommendations.
 
 Uploaded images are processed in memory and are not persisted by the API.
+
+The explainability overlay uses MediaPipe face landmarks. It does not detect a true hairline or neck landmark; the vertical measurement path is labeled as a face-top-to-chin segment.
+
+See [docs/measurement-definitions.md](docs/measurement-definitions.md) for landmark indices, formulas, overlay definitions, and limitations.
 
 ## Architecture
 
@@ -77,6 +82,22 @@ POST /analyze
     "mouth_width_to_face_width": 0.51,
     "symmetry_delta": 0.04
   },
+  "visualization": {
+    "bounding_box": {
+      "x_min": 0.21,
+      "y_min": 0.12,
+      "x_max": 0.78,
+      "y_max": 0.91
+    },
+    "measurement_segments": [
+      {
+        "name": "face_width",
+        "label": "Face width segment",
+        "start": {"x": 0.21, "y": 0.5},
+        "end": {"x": 0.78, "y": 0.5}
+      }
+    ]
+  },
   "quality": {
     "warnings": [],
     "message": null,
@@ -122,6 +143,14 @@ Open:
 http://127.0.0.1:8000/health
 http://127.0.0.1:8000/docs
 ```
+
+The static workbench is available at:
+
+```text
+http://127.0.0.1:8000/
+```
+
+It lets you choose a local image, preview it in the browser, submit it to `/analyze`, and inspect technical geometry results with an explainability overlay without adding a separate frontend service.
 
 ## Manual Real-Image Verification
 
@@ -195,7 +224,9 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - Image bytes are processed in memory only
 - Logs include request metadata such as content type and size, but never image payloads
 - The API returns geometric measurements only
+- Visualization overlays show landmark-derived technical measurement paths only
 - Results must not be interpreted as attractiveness, identity, medical, or personality judgments
+- Measurement definitions and limitations are documented in [docs/measurement-definitions.md](docs/measurement-definitions.md)
 
 ## Operations Notes
 
@@ -206,9 +237,9 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - `.env.example` documents safe non-secret defaults
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
+- See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, and troubleshooting notes
 
 ## Future Improvements
 
-- Add annotated landmark visualization
 - Add Kubernetes manifests and Helm chart
 - Add Argo CD GitOps deployment documentation

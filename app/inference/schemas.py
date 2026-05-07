@@ -32,6 +32,30 @@ class FaceRatios(BaseModel):
     symmetry_delta: float = Field(ge=0)
 
 
+class OverlayPoint(BaseModel):
+    x: float = Field(ge=0, le=1)
+    y: float = Field(ge=0, le=1)
+
+
+class OverlayBoundingBox(BaseModel):
+    x_min: float = Field(ge=0, le=1)
+    y_min: float = Field(ge=0, le=1)
+    x_max: float = Field(ge=0, le=1)
+    y_max: float = Field(ge=0, le=1)
+
+
+class MeasurementSegment(BaseModel):
+    name: str
+    label: str
+    start: OverlayPoint
+    end: OverlayPoint
+
+
+class VisualizationOverlay(BaseModel):
+    bounding_box: OverlayBoundingBox
+    measurement_segments: list[MeasurementSegment]
+
+
 class QualityReport(BaseModel):
     warnings: list[str]
     message: str | None = None
@@ -42,6 +66,7 @@ class AnalysisResponse(BaseModel):
     face_detected: bool
     model: ModelInfo
     ratios: FaceRatios | None
+    visualization: VisualizationOverlay | None = None
     quality: QualityReport
 
 

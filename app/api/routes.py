@@ -25,6 +25,7 @@ from app.inference.schemas import (
     ModelInfoResponse,
     QualityReport,
 )
+from app.inference.visualization import calculate_visualization_overlay
 
 router = APIRouter()
 logger = logging.getLogger("faceratioops.api")
@@ -155,6 +156,7 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
 
     warnings = list(detection.warnings)
     ratios = calculate_face_ratios(detection.landmarks) if detection.landmarks else None
+    visualization = calculate_visualization_overlay(detection.landmarks) if ratios is not None else None
     if ratios is None and detection.face_detected:
         warnings.append("ratio_calculation_unavailable")
 
@@ -172,5 +174,6 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
         face_detected=detection.face_detected,
         model=ModelInfo(name=detection.model_name, version=detection.model_version, task=MODEL_TASK),
         ratios=ratios,
+        visualization=visualization,
         quality=QualityReport(warnings=warnings, message=detection.message, confidence=detection.confidence),
     )
