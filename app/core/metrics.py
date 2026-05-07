@@ -2,7 +2,6 @@ from collections import Counter
 from dataclasses import dataclass, field
 from threading import Lock
 
-
 MetricKey = tuple[str, str, int]
 
 
