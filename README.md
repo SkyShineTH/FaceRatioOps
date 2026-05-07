@@ -54,6 +54,7 @@ JSON Response + Structured Logs + Health Checks
 GET  /health
 GET  /model-info
 GET  /model/info
+GET  /metrics
 POST /analyze
 ```
 
@@ -201,6 +202,7 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - `/health` returns app name, version, environment, status, and timestamp
 - `/model-info` returns inference backend metadata, technical capabilities, and safety limitations
 - `/model/info` remains available as a compatibility route
+- `/metrics` exposes Prometheus-style request counters and request duration sums
 - `.env.example` documents safe non-secret defaults
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
@@ -208,6 +210,5 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 ## Future Improvements
 
 - Add annotated landmark visualization
-- Add Prometheus-style `/metrics`
 - Add Kubernetes manifests and Helm chart
 - Add Argo CD GitOps deployment documentation

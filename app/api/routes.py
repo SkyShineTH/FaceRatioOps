@@ -3,7 +3,8 @@ from datetime import UTC, datetime
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
+from fastapi.responses import PlainTextResponse
 
 from app.core.config import get_settings
 from app.inference.landmarks import (
@@ -43,6 +44,7 @@ INFERENCE_UNAVAILABLE_DETAIL = (
     "Face landmark inference backend is unavailable. Install MediaPipe with "
     "`python -m pip install -e \".[inference]\"` or run the Docker image."
 )
+METRICS_MEDIA_TYPE = "text/plain; version=0.0.4; charset=utf-8"
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -70,6 +72,14 @@ def model_info() -> ModelInfoResponse:
         inference_enabled=model_version != MODEL_VERSION_UNAVAILABLE,
         capabilities=MODEL_CAPABILITIES,
         limitations=MODEL_LIMITATIONS,
+    )
+
+
+@router.get("/metrics", response_class=PlainTextResponse)
+def metrics(request: Request) -> PlainTextResponse:
+    return PlainTextResponse(
+        request.app.state.metrics.render_prometheus(),
+        media_type=METRICS_MEDIA_TYPE,
     )
 
 
