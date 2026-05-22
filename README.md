@@ -249,8 +249,11 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - `/model/info` remains available as a compatibility route
 - `/metrics` exposes Prometheus-style request counters and request duration sums for API metrics-first monitoring
 - `.env.example` documents safe non-secret defaults
+- `.env.production.example` documents safe production defaults for the planned DigitalOcean deployment
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
+- `docker-compose.prod.yml` binds the API to `127.0.0.1:8000` for reverse-proxy deployment
+- `deploy/Caddyfile` defines the HTTPS reverse proxy for `faceratioops.skyshine.online`
 - See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, deployment readiness checklist, and troubleshooting notes
 - See [docs/digitalocean-deployment.md](docs/digitalocean-deployment.md) for the planned manual DigitalOcean deployment runbook
 

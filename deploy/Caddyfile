@@ -1,0 +1,6 @@
+# Caddy terminates HTTPS and proxies requests to the loopback-bound API.
+# DNS must point faceratioops.skyshine.online to the Droplet before reload.
+faceratioops.skyshine.online {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8000
+}

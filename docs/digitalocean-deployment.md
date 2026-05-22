@@ -41,23 +41,25 @@ Default host-level choices:
 
 - Droplet: small Ubuntu LTS Droplet with enough memory for MediaPipe inference.
 - DNS: `A` record for `faceratioops.skyshine.online` pointing to the Droplet public IPv4 address.
-- HTTPS: Caddy installed on the host and proxying to `127.0.0.1:8000`.
-- App runtime: existing `docker-compose.yml` service.
+- HTTPS: host-installed Caddy using `deploy/Caddyfile` and proxying to `127.0.0.1:8000`.
+- App runtime: `docker-compose.yml` plus `docker-compose.prod.yml`.
 - Deployment trigger: manual SSH commands for the first production-style deployment.
 
-The repository's current Compose port mapping is intended for local development. Before a real public deployment, the API should be bound to loopback only, for example with a production override that maps `127.0.0.1:8000:8000`. Do not expose container port `8000` directly to the public internet.
+The repository's base Compose port mapping is intended for local development. The production override maps `127.0.0.1:8000:8000`; use it for public deployments so the API is reachable only through Caddy. Do not expose container port `8000` directly to the public internet.
 
 ## Pre-Deployment Checklist
 
 - Confirm the repository is clean or all intended changes are committed.
 - Confirm `ruff check .` and `pytest` pass locally or in CI.
 - Confirm `docker build -t faceratioops:local .` succeeds.
-- Confirm `.env` is created on the Droplet from `.env.example`; do not commit `.env`.
-- Set `ENVIRONMENT=production` in the Droplet `.env`.
+- Confirm `docker compose -f docker-compose.yml -f docker-compose.prod.yml config` succeeds.
+- Confirm `.env.production` is created on the Droplet from `.env.production.example`; do not commit `.env.production`.
+- Confirm `ENVIRONMENT=production` is set in `.env.production`.
 - Keep `MAX_UPLOAD_BYTES` and `MAX_IMAGE_PIXELS` conservative for the first public deployment.
 - Confirm image uploads are processed in memory only and are not persisted by the API.
 - Confirm logs contain request metadata only and do not include image payloads or base64 image data.
 - Confirm public copy describes technical geometry measurements only.
+- Confirm `deploy/Caddyfile` contains the expected public hostname before installing it on the Droplet.
 
 ## Droplet Setup
 
@@ -107,10 +109,10 @@ git pull --ff-only origin main
 Create the runtime environment file:
 
 ```bash
-cp .env.example .env
+cp .env.production.example .env.production
 ```
 
-Edit `.env` on the Droplet:
+Edit `.env.production` on the Droplet:
 
 ```text
 APP_NAME=FaceRatioOps
@@ -123,14 +125,24 @@ MAX_DETECTED_FACES=2
 MIN_DETECTION_CONFIDENCE=0.5
 ```
 
+Validate the merged production Compose config:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+```
+
+Confirm the generated `api` service has exactly this public port binding:
+
+```text
+127.0.0.1:8000->8000/tcp
+```
+
 Start the API:
 
 ```bash
-docker compose up -d --build
-docker compose ps
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 ```
-
-For the actual public deployment milestone, use a production Compose override or an equivalent host firewall/provider firewall rule so only Caddy can reach the API on `127.0.0.1:8000`.
 
 Verify from the Droplet:
 
@@ -142,13 +154,19 @@ curl -fsS http://127.0.0.1:8000/metrics
 
 ## Caddy HTTPS Proxy
 
-Configure Caddy to proxy the public subdomain to the local API:
+The repository includes `deploy/Caddyfile`:
 
 ```caddyfile
 faceratioops.skyshine.online {
     encode zstd gzip
     reverse_proxy 127.0.0.1:8000
 }
+```
+
+Install it on the host after DNS points to the Droplet:
+
+```bash
+sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
 ```
 
 Reload Caddy:
@@ -201,7 +219,7 @@ Metrics labels must stay limited to HTTP method, route path, and status code. Do
 Inspect service logs:
 
 ```bash
-docker compose logs --tail=100 api
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=100 api
 ```
 
 Expected safe log fields include request ID, content type, upload size, detection status, landmark count, warning count, and technical error reasons.
@@ -218,13 +236,13 @@ Logs must not include:
 Restart the service:
 
 ```bash
-docker compose restart api
+docker compose -f docker-compose.yml -f docker-compose.prod.yml restart api
 ```
 
 Stop the service:
 
 ```bash
-docker compose down
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
 Rollback to the previous commit if needed:
@@ -232,7 +250,7 @@ Rollback to the previous commit if needed:
 ```bash
 git log --oneline -5
 git checkout <previous-commit>
-docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 curl -fsS http://127.0.0.1:8000/health
 ```
 

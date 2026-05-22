@@ -111,6 +111,14 @@ docker compose up --build
 
 The Compose service uses a read-only filesystem, drops Linux capabilities, sets `no-new-privileges`, and mounts `/tmp` as temporary scratch space.
 
+Validate the production Compose override:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+```
+
+The production override binds the API to `127.0.0.1:8000` so Caddy can proxy it without exposing port `8000` directly to the public internet.
+
 ## Deployment Readiness
 
 The current service is local/container-ready. The planned public deployment is a manual DigitalOcean deployment behind HTTPS at:
@@ -132,6 +140,8 @@ Use `docs/digitalocean-deployment.md` as the manual deployment runbook. Do not e
 
 Before exposing the API publicly, confirm:
 
+- `docker-compose.prod.yml` is used with `docker-compose.yml`.
+- `deploy/Caddyfile` is installed or copied into the host Caddy config.
 - Upload limits are conservative for the Droplet size.
 - Image bytes are processed in memory only and are not written to disk.
 - Logs do not include image payloads, base64 image data, uploaded file contents, biometric templates, or sensitive personal attributes.
