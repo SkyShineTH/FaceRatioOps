@@ -111,6 +111,34 @@ docker compose up --build
 
 The Compose service uses a read-only filesystem, drops Linux capabilities, sets `no-new-privileges`, and mounts `/tmp` as temporary scratch space.
 
+## Deployment Readiness
+
+The current service is local/container-ready. The planned public deployment is a manual DigitalOcean deployment behind HTTPS at:
+
+```text
+https://faceratioops.skyshine.online/
+```
+
+Expected public operational endpoints:
+
+```text
+https://faceratioops.skyshine.online/health
+https://faceratioops.skyshine.online/docs
+https://faceratioops.skyshine.online/model-info
+https://faceratioops.skyshine.online/metrics
+```
+
+Use `docs/digitalocean-deployment.md` as the manual deployment runbook. Do not enable automated deployment until the manual deployment, rollback path, and privacy checks have been verified.
+
+Before exposing the API publicly, confirm:
+
+- Upload limits are conservative for the Droplet size.
+- Image bytes are processed in memory only and are not written to disk.
+- Logs do not include image payloads, base64 image data, uploaded file contents, biometric templates, or sensitive personal attributes.
+- Public endpoint copy describes technical geometry measurements only.
+- Error messages remain technical and do not judge a person's appearance.
+- Human review has approved deployment, Docker, CI/CD, and public wording changes.
+
 ## Logging
 
 Logs are structured JSON written to stdout. The API logs operational metadata such as request IDs, content type, upload size, detection status, landmark count, warning count, and technical error reasons.
@@ -137,7 +165,19 @@ Expected safe log examples include:
 - `faceratioops_http_requests_total`
 - `faceratioops_http_request_duration_seconds_sum`
 
-Labels include method, route path, and HTTP status. Metrics should be used for service behavior and reliability only. They must not include image contents, user identity, biometric templates, or personal attributes.
+Labels include method, route path, and HTTP status. Metrics should be used for service behavior and reliability only. They must not include image contents, user identity, biometric templates, demographic labels, or personal attributes.
+
+The first monitoring milestone is API metrics-first monitoring through the existing `/metrics` endpoint. Prometheus and Grafana should be added after the public deployment is stable and should scrape only operational metrics.
+
+API metrics-first verification:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
+Invoke-RestMethod http://127.0.0.1:8000/model-info
+Invoke-RestMethod http://127.0.0.1:8000/metrics
+```
+
+Confirm the metrics output includes `faceratioops_http_requests_total` and `faceratioops_http_request_duration_seconds_sum` with only method, path, and status labels.
 
 ## CI/CD Verification
 

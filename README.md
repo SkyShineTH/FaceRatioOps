@@ -42,6 +42,20 @@ Ratio Calculator
 JSON Response + Structured Logs + Health Checks
 ```
 
+## Project Status
+
+The service is currently local/container-ready and prepared for a manual DigitalOcean deployment. The next deployment milestone is to run the existing Docker Compose service behind HTTPS on:
+
+```text
+https://faceratioops.skyshine.online/
+https://faceratioops.skyshine.online/health
+https://faceratioops.skyshine.online/docs
+https://faceratioops.skyshine.online/model-info
+https://faceratioops.skyshine.online/metrics
+```
+
+The first deployment pass is intentionally manual. CI already validates linting, tests, and Docker builds; automated deployment should be added only after the manual runbook is verified and rollback behavior is documented.
+
 ## Tech Stack
 
 - Backend: FastAPI
@@ -233,13 +247,16 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - `/health` returns app name, version, environment, status, and timestamp
 - `/model-info` returns inference backend metadata, technical capabilities, and safety limitations
 - `/model/info` remains available as a compatibility route
-- `/metrics` exposes Prometheus-style request counters and request duration sums
+- `/metrics` exposes Prometheus-style request counters and request duration sums for API metrics-first monitoring
 - `.env.example` documents safe non-secret defaults
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
-- See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, and troubleshooting notes
+- See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, deployment readiness checklist, and troubleshooting notes
+- See [docs/digitalocean-deployment.md](docs/digitalocean-deployment.md) for the planned manual DigitalOcean deployment runbook
 
 ## Future Improvements
 
+- Complete manual DigitalOcean deployment with HTTPS and screenshots
+- Add Prometheus and Grafana after the public deployment is stable
 - Add Kubernetes manifests and Helm chart
 - Add Argo CD GitOps deployment documentation
