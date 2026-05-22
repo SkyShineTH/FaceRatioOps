@@ -270,6 +270,7 @@ Do not capture or publish screenshots containing uploaded face images, personal 
 
 ## Next Milestones
 
+- Review the local production Compose smoke-test evidence in `docs/local-production-smoke-test.md`.
 - Add Prometheus scraping for `/metrics`.
 - Add Grafana dashboard screenshots for request count, latency, errors, and health visibility.
 - Add manual `workflow_dispatch` deployment only after secrets, rollback, and human review gates are documented.

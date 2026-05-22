@@ -119,6 +119,8 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml config
 
 The production override binds the API to `127.0.0.1:8000` so Caddy can proxy it without exposing port `8000` directly to the public internet.
 
+For the latest local production Compose smoke-test evidence, see `docs/local-production-smoke-test.md`.
+
 ## Deployment Readiness
 
 The current service is local/container-ready. The planned public deployment is a manual DigitalOcean deployment behind HTTPS at:

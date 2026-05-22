@@ -255,6 +255,7 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - `docker-compose.prod.yml` binds the API to `127.0.0.1:8000` for reverse-proxy deployment
 - `deploy/Caddyfile` defines the HTTPS reverse proxy for `faceratioops.skyshine.online`
 - See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, deployment readiness checklist, and troubleshooting notes
+- See [docs/local-production-smoke-test.md](docs/local-production-smoke-test.md) for the latest local production Compose smoke-test evidence
 - See [docs/digitalocean-deployment.md](docs/digitalocean-deployment.md) for the planned manual DigitalOcean deployment runbook
 
 ## Future Improvements
