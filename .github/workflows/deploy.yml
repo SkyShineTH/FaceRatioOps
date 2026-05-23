@@ -1,0 +1,108 @@
+name: Manual Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_public_smoke:
+        description: "Run public HTTPS smoke checks after the Droplet deploy"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  PUBLIC_BASE_URL: https://faceratioops.skyshine.online
+
+jobs:
+  deploy:
+    name: Deploy main to DigitalOcean
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Validate required secrets
+        shell: bash
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+          DROPLET_SSH_KNOWN_HOSTS: ${{ secrets.DROPLET_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$DROPLET_HOST"
+          test -n "$DROPLET_USER"
+          test -n "$DROPLET_SSH_KEY"
+          test -n "$DROPLET_SSH_KNOWN_HOSTS"
+
+      - name: Prepare SSH
+        shell: bash
+        env:
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+          DROPLET_SSH_KNOWN_HOSTS: ${{ secrets.DROPLET_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DROPLET_SSH_KEY" > ~/.ssh/faceratioops_deploy_key
+          chmod 600 ~/.ssh/faceratioops_deploy_key
+          printf '%s\n' "$DROPLET_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy over SSH
+        shell: bash
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_SSH_PORT: ${{ secrets.DROPLET_SSH_PORT }}
+          DROPLET_DEPLOY_PATH: ${{ secrets.DROPLET_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          SSH_PORT="${DROPLET_SSH_PORT:-22}"
+          DEPLOY_PATH="${DROPLET_DEPLOY_PATH:-/opt/faceratioops}"
+          printf -v QUOTED_DEPLOY_PATH '%q' "$DEPLOY_PATH"
+
+          ssh -i ~/.ssh/faceratioops_deploy_key \
+            -p "$SSH_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$DROPLET_USER@$DROPLET_HOST" \
+            "DEPLOY_PATH=$QUOTED_DEPLOY_PATH bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+          git fetch origin --prune
+          git checkout main
+          git pull --ff-only origin main
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+          curl -fsS http://127.0.0.1:8000/health
+          curl -fsS http://127.0.0.1:8000/model-info
+          curl -fsS http://127.0.0.1:8000/metrics
+          REMOTE
+
+      - name: Public HTTPS smoke checks
+        if: ${{ inputs.run_public_smoke }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="${PUBLIC_BASE_URL%/}"
+          curl -fsS "$BASE_URL/health"
+          curl -fsS "$BASE_URL/model-info"
+          curl -fsS "$BASE_URL/metrics"
+          curl -fsS -o /dev/null "$BASE_URL/docs"
+          curl -fsS -o /dev/null "$BASE_URL/"
+
+      - name: Remove SSH key
+        if: always()
+        shell: bash
+        run: rm -f ~/.ssh/faceratioops_deploy_key

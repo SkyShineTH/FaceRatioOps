@@ -179,7 +179,7 @@ Expected safe log examples include:
 
 Labels include method, route path, and HTTP status. Metrics should be used for service behavior and reliability only. They must not include image contents, user identity, biometric templates, demographic labels, or personal attributes.
 
-The first monitoring milestone is API metrics-first monitoring through the existing `/metrics` endpoint. Prometheus and Grafana should be added after the public deployment is stable and should scrape only operational metrics.
+The first monitoring milestone is API metrics-first monitoring through the existing `/metrics` endpoint. Optional Prometheus and Grafana configuration is available in `docker-compose.monitoring.yml` and `deploy/`. Start it only after the API is stable, and scrape only operational metrics.
 
 API metrics-first verification:
 
@@ -191,7 +191,15 @@ Invoke-RestMethod http://127.0.0.1:8000/metrics
 
 Confirm the metrics output includes `faceratioops_http_requests_total` and `faceratioops_http_request_duration_seconds_sum` with only method, path, and status labels.
 
-## CI/CD Verification
+Start API monitoring with:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.monitoring.yml --profile monitoring up -d --build
+```
+
+Prometheus and Grafana bind to `127.0.0.1:9090` and `127.0.0.1:3000`. For remote access, use an SSH tunnel instead of exposing those ports publicly. See `docs/monitoring.md`.
+
+## CI/CD And GitHub Verification
 
 The GitHub Actions workflow in `.github/workflows/ci.yml` runs on push and pull request to `main`.
 
@@ -202,7 +210,13 @@ The pipeline verifies:
 - `pytest`
 - Docker image build.
 
-Before changing deployment, Docker, CI, or production configuration, run the closest local equivalent and include the results in the handoff. These changes require human review before merge.
+Additional repository controls:
+
+- `.github/workflows/deploy.yml` provides manual-only DigitalOcean deployment through `workflow_dispatch`.
+- `.github/workflows/codeql.yml` runs CodeQL analysis for Python.
+- `.github/dependabot.yml` configures dependency update PRs.
+
+Before changing deployment, Docker, monitoring, CI, or production configuration, run the closest local equivalent and include the results in the handoff. These changes require human review before merge.
 
 ## Privacy And Safety Checks
 

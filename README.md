@@ -30,7 +30,10 @@ See [docs/measurement-definitions.md](docs/measurement-definitions.md) for landm
 Client / Postman / curl
         |
         v
-FastAPI Inference API
+DigitalOcean DNS + Caddy HTTPS (production target)
+        |
+        v
+Docker Compose FastAPI Inference API
         |
         v
 MediaPipe Face Landmark Adapter
@@ -42,9 +45,11 @@ Ratio Calculator
 JSON Response + Structured Logs + Health Checks
 ```
 
+Optional operations monitoring uses Prometheus to scrape `/metrics` and Grafana to visualize request rate, latency, status/error rate, and scrape health.
+
 ## Project Status
 
-The service is currently local/container-ready and prepared for a manual DigitalOcean deployment. The next deployment milestone is to run the existing Docker Compose service behind HTTPS on:
+The service is local/container-ready and has production operations artifacts for a manual DigitalOcean deployment. The public deployment target is:
 
 ```text
 https://faceratioops.skyshine.online/
@@ -54,7 +59,7 @@ https://faceratioops.skyshine.online/model-info
 https://faceratioops.skyshine.online/metrics
 ```
 
-The first deployment pass is intentionally manual. CI already validates linting, tests, and Docker builds; automated deployment should be added only after the manual runbook is verified and rollback behavior is documented.
+The first deployment pass remains intentionally manual. The repository includes a `workflow_dispatch` deploy workflow, rollback documentation, monitoring Compose override, GitHub security/quality configuration, and public smoke-test evidence templates. Do not describe the service as publicly deployed until `docs/public-production-smoke-test.md` contains real passing evidence.
 
 ## Tech Stack
 
@@ -224,7 +229,7 @@ http://127.0.0.1:8000
 
 ## CI/CD Pipeline
 
-The GitHub Actions workflow runs on push and pull request to `main`:
+The main CI workflow runs on push and pull request to `main`:
 
 - install Python dependencies
 - run `ruff check .`
@@ -232,6 +237,14 @@ The GitHub Actions workflow runs on push and pull request to `main`:
 - build the Docker image
 
 Unit tests are deterministic and do not require real face images or MediaPipe downloads. The inference adapter tests use generated in-memory raster images and a fake MediaPipe module to verify the adapter contract.
+
+Additional GitHub operations files:
+
+- `.github/workflows/deploy.yml` is a manual-only DigitalOcean deploy workflow using `workflow_dispatch`
+- `.github/workflows/codeql.yml` runs CodeQL analysis for Python
+- `.github/dependabot.yml` configures Dependabot version updates for Python, Docker, and GitHub Actions
+
+Deployment, security, and public wording changes require human review before merge.
 
 ## Privacy and Safety Boundaries
 
@@ -253,14 +266,19 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
 - `docker-compose.prod.yml` binds the API to `127.0.0.1:8000` for reverse-proxy deployment
+- `docker-compose.monitoring.yml` adds optional loopback-bound Prometheus and Grafana services
 - `deploy/Caddyfile` defines the HTTPS reverse proxy for `faceratioops.skyshine.online`
 - See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, deployment readiness checklist, and troubleshooting notes
 - See [docs/local-production-smoke-test.md](docs/local-production-smoke-test.md) for the latest local production Compose smoke-test evidence
 - See [docs/digitalocean-deployment.md](docs/digitalocean-deployment.md) for the planned manual DigitalOcean deployment runbook
+- See [docs/deployment-workflow-and-rollback.md](docs/deployment-workflow-and-rollback.md) for manual GitHub Actions deployment and rollback
+- See [docs/monitoring.md](docs/monitoring.md) for Prometheus and Grafana operations
+- See [docs/github-security-quality.md](docs/github-security-quality.md) for GitHub security and branch-protection setup
+- See [docs/public-production-smoke-test.md](docs/public-production-smoke-test.md) and [docs/portfolio-evidence.md](docs/portfolio-evidence.md) before publishing production evidence
 
 ## Future Improvements
 
-- Complete manual DigitalOcean deployment with HTTPS and screenshots
-- Add Prometheus and Grafana after the public deployment is stable
+- Complete manual DigitalOcean deployment with HTTPS and public smoke-test evidence
+- Capture safe Prometheus/Grafana and production screenshots after deployment
 - Add Kubernetes manifests and Helm chart
 - Add Argo CD GitOps deployment documentation
