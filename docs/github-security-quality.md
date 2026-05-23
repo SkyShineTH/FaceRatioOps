@@ -7,6 +7,7 @@ This checklist captures the repository security and quality setup for FaceRatioO
 | Control | File |
 | --- | --- |
 | CI lint, tests, and Docker build | `.github/workflows/ci.yml` |
+| GHCR image publish | `.github/workflows/publish-image.yml` |
 | Manual production deployment | `.github/workflows/deploy.yml` |
 | CodeQL advanced setup for Python | `.github/workflows/codeql.yml` |
 | Dependabot version updates | `.github/dependabot.yml` |

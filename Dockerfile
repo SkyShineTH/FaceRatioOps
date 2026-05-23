@@ -2,7 +2,9 @@ FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=5
 
 WORKDIR /app
 
@@ -15,8 +17,18 @@ RUN apt-get update \
 COPY pyproject.toml README.md ./
 COPY app ./app
 
-RUN python -m pip install --upgrade pip \
-    && python -m pip install ".[inference]"
+RUN python -m pip install --retries 5 --timeout 120 --upgrade pip \
+    && python -m pip install --retries 5 --timeout 120 "." \
+    && python -m pip install --retries 5 --timeout 120 --no-deps "mediapipe==0.10.21" \
+    && python -m pip install --retries 5 --timeout 120 \
+        "absl-py" \
+        "attrs>=19.1.0" \
+        "flatbuffers>=2.0" \
+        "matplotlib" \
+        "opencv-contrib-python<4.12" \
+        "protobuf>=4.25.3,<5" \
+        "sentencepiece" \
+        "sounddevice>=0.4.4"
 
 ENV MPLCONFIGDIR=/tmp/matplotlib \
     XDG_CACHE_HOME=/tmp/.cache

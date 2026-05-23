@@ -25,6 +25,7 @@ dist/
 !.env.example
 !.env.monitoring.example
 !.env.production.example
+!.env.production.512mb.example
 
 # Runtime and OS noise
 *.log

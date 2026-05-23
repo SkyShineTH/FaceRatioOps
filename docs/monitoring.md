@@ -35,8 +35,17 @@ docker compose \
   -f docker-compose.prod.yml \
   -f docker-compose.monitoring.yml \
   --profile monitoring \
-  up -d --build
+  pull api prometheus grafana
+
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.prod.yml \
+  -f docker-compose.monitoring.yml \
+  --profile monitoring \
+  up -d --no-build
 ```
+
+Do not run Prometheus or Grafana on a 512 MB Droplet. Use this monitoring stack after upgrading the Droplet or run monitoring elsewhere.
 
 Verify service status:
 

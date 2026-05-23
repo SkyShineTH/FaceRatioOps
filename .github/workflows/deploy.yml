@@ -18,6 +18,7 @@ concurrency:
 
 env:
   PUBLIC_BASE_URL: https://faceratioops.skyshine.online
+  FACERATIOOPS_IMAGE: ghcr.io/skyshineth/faceratioops:main
 
 jobs:
   deploy:
@@ -69,25 +70,29 @@ jobs:
           set -euo pipefail
           SSH_PORT="${DROPLET_SSH_PORT:-22}"
           DEPLOY_PATH="${DROPLET_DEPLOY_PATH:-/opt/faceratioops}"
+          IMAGE_REF="${FACERATIOOPS_IMAGE}"
           printf -v QUOTED_DEPLOY_PATH '%q' "$DEPLOY_PATH"
+          printf -v QUOTED_IMAGE_REF '%q' "$IMAGE_REF"
 
           ssh -i ~/.ssh/faceratioops_deploy_key \
             -p "$SSH_PORT" \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$DROPLET_USER@$DROPLET_HOST" \
-            "DEPLOY_PATH=$QUOTED_DEPLOY_PATH bash -s" <<'REMOTE'
+            "DEPLOY_PATH=$QUOTED_DEPLOY_PATH FACERATIOOPS_IMAGE=$QUOTED_IMAGE_REF bash -s" <<'REMOTE'
           set -euo pipefail
           cd "$DEPLOY_PATH"
           git fetch origin --prune
           git checkout main
           git pull --ff-only origin main
           docker compose -f docker-compose.yml -f docker-compose.prod.yml config
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
           docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
           curl -fsS http://127.0.0.1:8000/health
           curl -fsS http://127.0.0.1:8000/model-info
           curl -fsS http://127.0.0.1:8000/metrics
+          docker image prune -f --filter "until=168h" >/dev/null || true
           REMOTE
 
       - name: Public HTTPS smoke checks

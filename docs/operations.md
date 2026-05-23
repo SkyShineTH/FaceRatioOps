@@ -117,7 +117,7 @@ Validate the production Compose override:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml config
 ```
 
-The production override binds the API to `127.0.0.1:8000` so Caddy can proxy it without exposing port `8000` directly to the public internet.
+The production override uses the prebuilt GHCR image by default and binds the API to `127.0.0.1:8000` so Caddy can proxy it without exposing port `8000` directly to the public internet. On low-memory Droplets, use `docker compose pull` and `up -d --no-build`; do not build MediaPipe dependencies on the server.
 
 For the latest local production Compose smoke-test evidence, see `docs/local-production-smoke-test.md`.
 
@@ -143,6 +143,7 @@ Use `docs/digitalocean-deployment.md` as the manual deployment runbook. Do not e
 Before exposing the API publicly, confirm:
 
 - `docker-compose.prod.yml` is used with `docker-compose.yml`.
+- The default GHCR image is acceptable, or `FACERATIOOPS_IMAGE` is exported in the shell for a specific rollback/test image.
 - `deploy/Caddyfile` is installed or copied into the host Caddy config.
 - Upload limits are conservative for the Droplet size.
 - Image bytes are processed in memory only and are not written to disk.
@@ -194,7 +195,7 @@ Confirm the metrics output includes `faceratioops_http_requests_total` and `face
 Start API monitoring with:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.monitoring.yml --profile monitoring up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.monitoring.yml --profile monitoring up -d --no-build
 ```
 
 Prometheus and Grafana bind to `127.0.0.1:9090` and `127.0.0.1:3000`. For remote access, use an SSH tunnel instead of exposing those ports publicly. See `docs/monitoring.md`.
@@ -212,6 +213,7 @@ The pipeline verifies:
 
 Additional repository controls:
 
+- `.github/workflows/publish-image.yml` builds and publishes the GHCR image used by production Compose.
 - `.github/workflows/deploy.yml` provides manual-only DigitalOcean deployment through `workflow_dispatch`.
 - `.github/workflows/codeql.yml` runs CodeQL analysis for Python.
 - `.github/dependabot.yml` configures dependency update PRs.

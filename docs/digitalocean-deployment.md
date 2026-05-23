@@ -42,18 +42,21 @@ Default host-level choices:
 - Droplet: small Ubuntu LTS Droplet with enough memory for MediaPipe inference.
 - DNS: `A` record for `faceratioops.skyshine.online` pointing to the Droplet public IPv4 address.
 - HTTPS: host-installed Caddy using `deploy/Caddyfile` and proxying to `127.0.0.1:8000`.
-- App runtime: `docker-compose.yml` plus `docker-compose.prod.yml`.
+- App runtime: `docker-compose.yml` plus `docker-compose.prod.yml`, pulling the prebuilt GHCR image by default.
 - Deployment trigger: manual SSH commands for the first production-style deployment.
 
 The repository's base Compose port mapping is intended for local development. The production override maps `127.0.0.1:8000:8000`; use it for public deployments so the API is reachable only through Caddy. Do not expose container port `8000` directly to the public internet.
+
+The production override also clears the inherited Docker build configuration. This keeps low-memory Droplets from trying to build MediaPipe/OpenCV dependencies locally.
 
 ## Pre-Deployment Checklist
 
 - Confirm the repository is clean or all intended changes are committed.
 - Confirm `ruff check .` and `pytest` pass locally or in CI.
 - Confirm `docker build -t faceratioops:local .` succeeds.
+- Confirm `.github/workflows/publish-image.yml` has published `ghcr.io/skyshineth/faceratioops:main`.
 - Confirm `docker compose -f docker-compose.yml -f docker-compose.prod.yml config` succeeds.
-- Confirm `.env.production` is created on the Droplet from `.env.production.example`; do not commit `.env.production`.
+- Confirm `.env.production` is created on the Droplet from `.env.production.example` or `.env.production.512mb.example`; do not commit `.env.production`.
 - Confirm `ENVIRONMENT=production` is set in `.env.production`.
 - Keep `MAX_UPLOAD_BYTES` and `MAX_IMAGE_PIXELS` conservative for the first public deployment.
 - Confirm image uploads are processed in memory only and are not persisted by the API.
@@ -106,10 +109,18 @@ git checkout main
 git pull --ff-only origin main
 ```
 
-Create the runtime environment file:
+Create the runtime environment file.
+
+For the recommended production-size Droplet:
 
 ```bash
 cp .env.production.example .env.production
+```
+
+For the temporary 512 MB budget Droplet:
+
+```bash
+cp .env.production.512mb.example .env.production
 ```
 
 Edit `.env.production` on the Droplet:
@@ -125,6 +136,8 @@ MAX_DETECTED_FACES=2
 MIN_DETECTION_CONFIDENCE=0.5
 ```
 
+The default production image is `ghcr.io/skyshineth/faceratioops:main`. If you need to override it for rollback or testing, set `FACERATIOOPS_IMAGE` in the shell before running Compose.
+
 Validate the merged production Compose config:
 
 ```bash
@@ -137,10 +150,11 @@ Confirm the generated `api` service has exactly this public port binding:
 127.0.0.1:8000->8000/tcp
 ```
 
-Start the API:
+Start the API from the prebuilt image:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 ```
 
@@ -250,7 +264,8 @@ Rollback to the previous commit if needed:
 ```bash
 git log --oneline -5
 git checkout <previous-commit>
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 curl -fsS http://127.0.0.1:8000/health
 ```
 

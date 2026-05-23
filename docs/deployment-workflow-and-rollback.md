@@ -1,6 +1,6 @@
 # Manual Deploy Workflow And Rollback
 
-FaceRatioOps uses a manual-only GitHub Actions deploy workflow for the first production deployment phase. It deploys the `main` branch to an already prepared DigitalOcean Droplet over SSH, rebuilds the Docker Compose stack, and verifies operational endpoints.
+FaceRatioOps uses a manual-only GitHub Actions deploy workflow for the first production deployment phase. It deploys the `main` branch to an already prepared DigitalOcean Droplet over SSH, pulls the prebuilt GHCR image, restarts the Docker Compose stack without building on the Droplet, and verifies operational endpoints.
 
 Do not add automatic deploy-on-push until the manual workflow, rollback path, logs, and public smoke-test evidence have passed human review.
 
@@ -10,7 +10,7 @@ Do not add automatic deploy-on-push until the manual workflow, rollback path, lo
 .github/workflows/deploy.yml
 ```
 
-The workflow is triggered only by `workflow_dispatch`. It checks out `main`, connects to the Droplet, runs `git pull --ff-only origin main`, starts the production Compose stack, and verifies:
+The workflow is triggered only by `workflow_dispatch`. It checks out `main`, connects to the Droplet, runs `git pull --ff-only origin main`, pulls `ghcr.io/skyshineth/faceratioops:main`, starts the production Compose stack with `--no-build`, and verifies:
 
 ```text
 http://127.0.0.1:8000/health
@@ -64,6 +64,8 @@ The Droplet must already have:
 - Git installed.
 - The repo cloned at `DROPLET_DEPLOY_PATH`.
 - `.env.production` created from `.env.production.example`.
+- GHCR image `ghcr.io/skyshineth/faceratioops:main` published by `.github/workflows/publish-image.yml`.
+- GHCR package visibility set to public, or Docker logged in on the Droplet with a read-only token.
 - Caddy configured for `faceratioops.skyshine.online`.
 - Firewall allowing only SSH, HTTP, and HTTPS publicly.
 - API bound to `127.0.0.1:8000` through `docker-compose.prod.yml`.
@@ -96,11 +98,14 @@ Find the previous known-good commit:
 git log --oneline -10
 ```
 
-Check out the previous commit and rebuild:
+Check out the previous known-good commit and pull the image configured for that commit:
 
 ```bash
 git checkout <previous-good-commit>
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+FACERATIOOPS_IMAGE=ghcr.io/skyshineth/faceratioops:<previous-good-sha> \
+  docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
+FACERATIOOPS_IMAGE=ghcr.io/skyshineth/faceratioops:<previous-good-sha> \
+  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 ```
 
 Verify local endpoints from the Droplet:
@@ -124,7 +129,8 @@ After rollback validation, either stay pinned temporarily or return to `main` af
 ```bash
 git checkout main
 git pull --ff-only origin main
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 ```
 
 ## Post-Deploy Review

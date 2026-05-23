@@ -2,6 +2,8 @@
 
 This smoke test verifies the production Compose override before a public DigitalOcean deployment. It confirms that the API starts with production environment values, binds only to loopback on the host, exposes the expected operational endpoints, and does not log uploaded image payloads.
 
+Note: the production override now defaults to the prebuilt GHCR image path for low-memory Droplets. Rerun this smoke test after the first successful `Publish Container Image` workflow if you want fresh evidence for the pull-based deployment path.
+
 Last local verification: 2026-05-23 Asia/Bangkok.
 
 ## Scope
@@ -28,10 +30,11 @@ Validate the merged production Compose configuration:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml config
 ```
 
-Start the stack:
+Start the stack from a prebuilt image:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 ```
 
 Check container status and host port binding:
