@@ -8,7 +8,7 @@ Target URL:
 https://faceratioops.skyshine.online/
 ```
 
-Last public verification: not yet run.
+Last public verification: 2026-05-24 Asia/Bangkok.
 
 ## Scope
 
@@ -51,15 +51,20 @@ curl -fsS -o /dev/null -w "%{http_code}\n" https://faceratioops.skyshine.online/
 
 | Check | Expected | Result |
 | --- | --- | --- |
-| DNS A record | Points to Droplet public IPv4 | Pending |
-| HTTPS root | `200` for `/` | Pending |
-| Swagger docs | `200` for `/docs` | Pending |
-| Health | `status: ok`, `environment: production` | Pending |
-| Model info | Technical capabilities and safety limitations only | Pending |
-| Metrics | `faceratioops_http_requests_total` and duration sum | Pending |
-| Docker port binding | `127.0.0.1:8000->8000/tcp` | Pending |
-| App logs | No image payloads or sensitive biometric data | Pending |
-| Caddy logs | No secrets or sensitive payloads | Pending |
+| DNS A record | Points to Droplet public IPv4 | Pass - `faceratioops.skyshine.online` points to `165.232.162.27` through Cloudflare. |
+| HTTPS root | `200` for `/` | Pass - `/` returned `200`. |
+| Swagger docs | `200` for `/docs` | Pass - `/docs` returned `200`. |
+| Health | `status: ok`, `environment: production` | Pass - `/health` returned `200` with `environment: production`. |
+| Model info | Technical capabilities and safety limitations only | Pass - `/model-info` returned `200`. |
+| Metrics | `faceratioops_http_requests_total` and duration sum | Pass - `/metrics` returned `200`. |
+| Docker port binding | `127.0.0.1:8000->8000/tcp` | Pass - API container is healthy and bound to `127.0.0.1:8000->8000/tcp`. |
+| App logs | No image payloads or sensitive biometric data | Pass - no sensitive image payloads or biometric data observed. |
+| Caddy logs | No secrets or sensitive payloads | Pass - no secrets or sensitive payloads observed. |
+
+Additional notes:
+
+- Cloudflare proxy is enabled and public HTTPS requests return through Cloudflare.
+- No face image upload test was performed during this smoke test.
 
 ## Screenshot Checklist
 
