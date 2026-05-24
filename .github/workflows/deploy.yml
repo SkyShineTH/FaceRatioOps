@@ -89,7 +89,23 @@ jobs:
           docker compose -f docker-compose.yml -f docker-compose.prod.yml pull api
           docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
           docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
-          curl -fsS http://127.0.0.1:8000/health
+
+          echo "Waiting for API readiness..."
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/health; then
+              break
+            fi
+
+            if [ "$attempt" -eq 60 ]; then
+              echo "API did not become ready within 120 seconds."
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=80 api
+              exit 1
+            fi
+
+            sleep 2
+          done
+
           curl -fsS http://127.0.0.1:8000/model-info
           curl -fsS http://127.0.0.1:8000/metrics
           docker image prune -f --filter "until=168h" >/dev/null || true
