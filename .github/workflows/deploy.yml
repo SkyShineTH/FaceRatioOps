@@ -1,4 +1,4 @@
-name: Manual Production Deploy
+name: Production Deploy
 
 on:
   workflow_dispatch:
@@ -8,6 +8,10 @@ on:
         required: true
         type: boolean
         default: true
+  workflow_run:
+    workflows: ["Publish Container Image"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -23,6 +27,7 @@ env:
 jobs:
   deploy:
     name: Deploy main to DigitalOcean
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: production
 
@@ -112,7 +117,7 @@ jobs:
           REMOTE
 
       - name: Public HTTPS smoke checks
-        if: ${{ inputs.run_public_smoke }}
+        if: ${{ github.event_name == 'workflow_run' || inputs.run_public_smoke }}
         shell: bash
         run: |
           set -euo pipefail

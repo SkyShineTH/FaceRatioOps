@@ -18,6 +18,18 @@ services:
       api:
         condition: service_healthy
 
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    profiles:
+      - monitoring
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+    expose:
+      - "9100"
+    volumes:
+      - /:/host:ro,rslave
+
   grafana:
     image: grafana/grafana:11.3.1
     profiles:

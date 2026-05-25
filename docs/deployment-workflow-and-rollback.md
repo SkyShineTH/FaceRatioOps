@@ -1,8 +1,8 @@
-# Manual Deploy Workflow And Rollback
+# Production Deploy Workflow And Rollback
 
-FaceRatioOps uses a manual-only GitHub Actions deploy workflow for the first production deployment phase. It deploys the `main` branch to an already prepared DigitalOcean Droplet over SSH, pulls the prebuilt GHCR image, restarts the Docker Compose stack without building on the Droplet, and verifies operational endpoints.
+FaceRatioOps uses GitHub Actions to deploy the `main` branch to an already prepared DigitalOcean Droplet over SSH. The deployment pulls the prebuilt GHCR image, restarts the Docker Compose stack without building on the Droplet, and verifies operational endpoints.
 
-Do not add automatic deploy-on-push until the manual workflow, rollback path, logs, and public smoke-test evidence have passed human review.
+Production deploys run automatically after the GHCR publish workflow succeeds on `main`. The workflow can still be triggered manually as a release fallback or rollback verification path.
 
 ## Workflow File
 
@@ -10,7 +10,12 @@ Do not add automatic deploy-on-push until the manual workflow, rollback path, lo
 .github/workflows/deploy.yml
 ```
 
-The workflow is triggered only by `workflow_dispatch`. It checks out `main`, connects to the Droplet, runs `git pull --ff-only origin main`, pulls `ghcr.io/skyshineth/faceratioops:main`, starts the production Compose stack with `--no-build`, and verifies:
+The workflow is triggered by:
+
+- `workflow_run` after `Publish Container Image` completes successfully on `main`.
+- `workflow_dispatch` for manual release, redeploy, or rollback verification.
+
+It checks out `main`, connects to the Droplet, runs `git pull --ff-only origin main`, pulls `ghcr.io/skyshineth/faceratioops:main`, starts the production Compose stack with `--no-build`, waits for API readiness, and verifies:
 
 ```text
 http://127.0.0.1:8000/health
@@ -70,20 +75,27 @@ The Droplet must already have:
 - Firewall allowing only SSH, HTTP, and HTTPS publicly.
 - API bound to `127.0.0.1:8000` through `docker-compose.prod.yml`.
 
-## Run The Workflow
+## Automatic Deploy Flow
+
+1. Push or merge changes to `main`.
+2. `.github/workflows/publish-image.yml` builds and pushes `ghcr.io/skyshineth/faceratioops:main`.
+3. `.github/workflows/deploy.yml` starts after the publish workflow completes successfully.
+4. The deploy workflow updates the Droplet, pulls the current GHCR image, restarts the production stack, waits for `/health`, and runs local plus public smoke checks.
+
+If the repository has a protected `production` environment with required reviewers, approve the deployment only after reviewing the change set and risk summary.
+
+## Manual Deploy Fallback
 
 1. Open the repository on GitHub.
 2. Go to Actions.
-3. Select `Manual Production Deploy`.
+3. Select `Production Deploy`.
 4. Select `Run workflow`.
 5. Leave public smoke checks enabled after DNS and HTTPS are live.
 6. Review the workflow logs for local health, model info, metrics, and public endpoint checks.
 
-If the repository has a protected `production` environment, approve the deployment only after reviewing the change set and risk summary.
-
 ## Rollback
 
-Rollback remains manual until the deploy workflow is proven stable.
+Rollback remains manual so production can be pinned to a known-good commit and image tag deliberately.
 
 SSH into the Droplet:
 
