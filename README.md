@@ -30,7 +30,10 @@ See [docs/measurement-definitions.md](docs/measurement-definitions.md) for landm
 Client / Postman / curl
         |
         v
-DigitalOcean DNS + Caddy HTTPS (production target)
+Cloudflare DNS / HTTPS
+        |
+        v
+DigitalOcean Droplet + Caddy reverse proxy
         |
         v
 Docker Compose FastAPI Inference API
@@ -45,11 +48,13 @@ Ratio Calculator
 JSON Response + Structured Logs + Health Checks
 ```
 
-Optional operations monitoring uses Prometheus to scrape `/metrics` and Grafana to visualize request rate, latency, status/error rate, and scrape health.
+Operations monitoring uses Prometheus to scrape API `/metrics`, Node Exporter to expose Droplet host metrics, and Grafana dashboards to visualize request rate, latency, status/error rate, scrape health, CPU, memory, disk, and network usage.
 
 ## Project Status
 
-The service is local/container-ready and has production operations artifacts for a manual DigitalOcean deployment. The public deployment target is:
+FaceRatioOps is publicly deployed as a production-style portfolio service on DigitalOcean with HTTPS, reverse proxying, container health checks, public operational endpoints, GitHub Actions deployment, rollback documentation, and monitoring evidence.
+
+Production URL:
 
 ```text
 https://faceratioops.skyshine.online/
@@ -59,9 +64,9 @@ https://faceratioops.skyshine.online/model-info
 https://faceratioops.skyshine.online/metrics
 ```
 
-The first deployment pass remains intentionally manual. The repository includes a `workflow_dispatch` deploy workflow, rollback documentation, monitoring Compose override, GitHub security/quality configuration, and public smoke-test evidence templates. Do not describe the service as publicly deployed until `docs/public-production-smoke-test.md` contains real passing evidence.
+Public smoke-test evidence is documented in [docs/public-production-smoke-test.md](docs/public-production-smoke-test.md). Deployment and rollback behavior is documented in [docs/deployment-workflow-and-rollback.md](docs/deployment-workflow-and-rollback.md).
 
-For a temporary 512 MB budget Droplet, use the GHCR prebuilt image path instead of building on the server. See [docs/low-memory-droplet.md](docs/low-memory-droplet.md).
+The service originally supported a temporary 512 MB budget Droplet by pulling the prebuilt GHCR image instead of building on the server. The current production path uses the same pull-based deployment flow and can run monitoring after scaling the Droplet. See [docs/low-memory-droplet.md](docs/low-memory-droplet.md) for the budget-runtime path.
 
 ## Tech Stack
 
@@ -72,7 +77,9 @@ For a temporary 512 MB budget Droplet, use the GHCR prebuilt image path instead 
 - Testing: pytest
 - Linting: ruff
 - Containerization: Docker, Docker Compose
-- CI/CD: GitHub Actions
+- CI/CD: GitHub Actions, GitHub Container Registry
+- Reverse proxy: Caddy
+- Monitoring: Prometheus, Grafana, Node Exporter
 
 ## API Endpoints
 
@@ -243,11 +250,11 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 Additional GitHub operations files:
 
 - `.github/workflows/publish-image.yml` builds and publishes the production image to GitHub Container Registry
-- `.github/workflows/deploy.yml` is a manual-only DigitalOcean deploy workflow using `workflow_dispatch`
+- `.github/workflows/deploy.yml` automatically deploys after the image publish workflow succeeds on `main`, with `workflow_dispatch` retained as a manual fallback
 - `.github/workflows/codeql.yml` runs CodeQL analysis for Python
 - `.github/dependabot.yml` configures Dependabot version updates for Python, Docker, and GitHub Actions
 
-Deployment, security, and public wording changes require human review before merge.
+Production deployment connects to the Droplet over SSH, pulls `ghcr.io/skyshineth/faceratioops:main`, restarts the Compose stack without building on the Droplet, waits for `/health`, and runs local plus public smoke checks. Deployment, security, and public wording changes require human review before merge.
 
 ## Privacy and Safety Boundaries
 
@@ -265,24 +272,23 @@ Deployment, security, and public wording changes require human review before mer
 - `/model/info` remains available as a compatibility route
 - `/metrics` exposes Prometheus-style request counters and request duration sums for API metrics-first monitoring
 - `.env.example` documents safe non-secret defaults
-- `.env.production.example` documents safe production defaults for the planned DigitalOcean deployment
+- `.env.production.example` documents safe production defaults for DigitalOcean deployment
 - Docker health checks call `/health`
 - The Docker Compose service runs without extra Linux capabilities, with a read-only filesystem and `/tmp` mounted as temporary scratch space
 - `docker-compose.prod.yml` uses a GHCR prebuilt image by default and binds the API to `127.0.0.1:8000` for reverse-proxy deployment
-- `docker-compose.monitoring.yml` adds optional loopback-bound Prometheus and Grafana services
+- `docker-compose.monitoring.yml` adds loopback-bound Prometheus and Grafana services plus an internal Node Exporter target
 - `deploy/Caddyfile` defines the HTTPS reverse proxy for `faceratioops.skyshine.online`
 - See [docs/operations.md](docs/operations.md) for the local runbook, Docker workflow, logging guidance, privacy checks, deployment readiness checklist, and troubleshooting notes
 - See [docs/local-production-smoke-test.md](docs/local-production-smoke-test.md) for the latest local production Compose smoke-test evidence
-- See [docs/digitalocean-deployment.md](docs/digitalocean-deployment.md) for the planned manual DigitalOcean deployment runbook
+- See [docs/digitalocean-deployment.md](docs/digitalocean-deployment.md) for the DigitalOcean deployment runbook
 - See [docs/low-memory-droplet.md](docs/low-memory-droplet.md) for the 512 MB budget runtime path
-- See [docs/deployment-workflow-and-rollback.md](docs/deployment-workflow-and-rollback.md) for manual GitHub Actions deployment and rollback
-- See [docs/monitoring.md](docs/monitoring.md) for Prometheus and Grafana operations
+- See [docs/deployment-workflow-and-rollback.md](docs/deployment-workflow-and-rollback.md) for GitHub Actions deployment and rollback
+- See [docs/monitoring.md](docs/monitoring.md) for Prometheus, Grafana, and Node Exporter operations
 - See [docs/github-security-quality.md](docs/github-security-quality.md) for GitHub security and branch-protection setup
-- See [docs/public-production-smoke-test.md](docs/public-production-smoke-test.md) and [docs/portfolio-evidence.md](docs/portfolio-evidence.md) before publishing production evidence
+- See [docs/public-production-smoke-test.md](docs/public-production-smoke-test.md) and [docs/portfolio-evidence.md](docs/portfolio-evidence.md) for production and portfolio evidence
 
 ## Future Improvements
 
-- Complete manual DigitalOcean deployment with HTTPS and public smoke-test evidence
-- Capture safe Prometheus/Grafana and production screenshots after deployment
+- Add external uptime checks and alert routing for public endpoint availability
 - Add Kubernetes manifests and Helm chart
 - Add Argo CD GitOps deployment documentation

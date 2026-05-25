@@ -27,8 +27,8 @@ Technical Geometry JSON + Prometheus Metrics + Structured Logs
 Optional monitoring:
 
 ```text
-Prometheus -> /metrics
-Grafana -> Prometheus datasource + FaceRatioOps dashboard
+Prometheus -> API /metrics + Node Exporter host metrics
+Grafana -> Prometheus datasource + FaceRatioOps and Node Exporter dashboards
 ```
 
 ## Evidence To Capture
@@ -42,15 +42,15 @@ Grafana -> Prometheus datasource + FaceRatioOps dashboard
 | Metrics response | `https://faceratioops.skyshine.online/metrics` |
 | Grafana dashboard | SSH-tunneled Grafana from `docs/monitoring.md` |
 | Container status | Droplet terminal or DigitalOcean dashboard with sensitive fields hidden |
-| GitHub checks | CI, CodeQL, Dependabot, manual deploy workflow |
+| GitHub checks | CI, CodeQL, Dependabot, image publishing, production deploy workflow |
 
 ## Resume Bullets
 
 Use only after the relevant evidence exists:
 
 - Deployed a privacy-first FastAPI computer vision inference API on DigitalOcean using Docker Compose and Caddy HTTPS, exposing health, model metadata, and Prometheus metrics endpoints.
-- Implemented production-style observability with Prometheus and Grafana dashboards for request rate, latency, status/error rate, and service health while keeping uploaded images in memory and out of logs.
-- Built CI and operational quality gates with ruff, pytest, Docker image builds, Dependabot, CodeQL, and a manual GitHub Actions deployment workflow with SSH health checks and rollback documentation.
+- Implemented production-style observability with Prometheus, Grafana, and Node Exporter dashboards for request rate, latency, status/error rate, service health, and host resource visibility while keeping uploaded images in memory and out of logs.
+- Built CI/CD and operational quality gates with ruff, pytest, Docker image publishing to GitHub Container Registry, Dependabot, CodeQL, automated GitHub Actions deployment, SSH health checks, and rollback documentation.
 
 ## Public Wording Rules
 
