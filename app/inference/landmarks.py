@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 from io import BytesIO
 from types import ModuleType
@@ -42,6 +43,7 @@ class ImageTooLargeError(ValueError):
     """Raised when decoded image dimensions exceed the configured safety limit."""
 
 
+@lru_cache
 def get_mediapipe_version() -> str:
     try:
         return version("mediapipe")
@@ -59,7 +61,6 @@ def _import_mediapipe() -> ModuleType:
 
 def _load_rgb_image(image_bytes: bytes) -> np.ndarray:
     settings = get_settings()
-    Image.MAX_IMAGE_PIXELS = settings.max_image_pixels
 
     try:
         with Image.open(BytesIO(image_bytes)) as image:

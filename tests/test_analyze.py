@@ -9,36 +9,9 @@ from app.inference.landmarks import (
     LandmarkDetection,
     LandmarkDetectorUnavailable,
 )
-from app.inference.ratios import (
-    FACE_BOTTOM,
-    FACE_LEFT,
-    FACE_RIGHT,
-    FACE_TOP,
-    LEFT_EYE_OUTER,
-    MOUTH_LEFT,
-    MOUTH_RIGHT,
-    NOSE_LEFT,
-    NOSE_RIGHT,
-    RIGHT_EYE_OUTER,
-)
 from app.main import app
 
 client = TestClient(app)
-
-
-def _complete_landmarks() -> list[Landmark]:
-    points = [Landmark(0.0, 0.0, 0.0) for _ in range(478)]
-    points[FACE_LEFT] = Landmark(0.2, 0.5)
-    points[FACE_RIGHT] = Landmark(0.8, 0.5)
-    points[FACE_TOP] = Landmark(0.5, 0.1)
-    points[FACE_BOTTOM] = Landmark(0.5, 0.9)
-    points[LEFT_EYE_OUTER] = Landmark(0.35, 0.35)
-    points[RIGHT_EYE_OUTER] = Landmark(0.65, 0.35)
-    points[NOSE_LEFT] = Landmark(0.45, 0.55)
-    points[NOSE_RIGHT] = Landmark(0.55, 0.55)
-    points[MOUTH_LEFT] = Landmark(0.4, 0.7)
-    points[MOUTH_RIGHT] = Landmark(0.6, 0.7)
-    return points
 
 
 def test_analyze_rejects_unsupported_content_type() -> None:
@@ -70,13 +43,13 @@ def test_analyze_rejects_upload_above_size_limit(monkeypatch) -> None:
     assert response.json()["detail"] == "Image exceeds the configured upload limit of 8 bytes."
 
 
-def test_analyze_returns_ratios_for_single_detected_face(monkeypatch) -> None:
+def test_analyze_returns_ratios_for_single_detected_face(monkeypatch, complete_landmarks: list[Landmark]) -> None:
     monkeypatch.setattr(
         routes,
         "detect_face_landmarks",
         lambda image_bytes: LandmarkDetection(
             face_detected=True,
-            landmarks=_complete_landmarks(),
+            landmarks=complete_landmarks,
             confidence=0.98,
             warnings=[],
             model_version="test-double",

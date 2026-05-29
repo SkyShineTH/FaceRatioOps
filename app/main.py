@@ -1,4 +1,5 @@
 from pathlib import Path
+from time import perf_counter
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -30,12 +31,10 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def record_request_metrics(request, call_next):
-        from time import perf_counter
-
         started_at = perf_counter()
         response = await call_next(request)
         route = request.scope.get("route")
-        path = getattr(route, "path", request.url.path)
+        path = getattr(route, "path", None) or "<unmatched>"
         app.state.metrics.record_request(
             method=request.method,
             path=path,

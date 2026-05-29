@@ -14,6 +14,11 @@ NOSE_RIGHT = 279
 MOUTH_LEFT = 61
 MOUTH_RIGHT = 291
 
+REQUIRED_LANDMARK_INDEX = max(
+    FACE_LEFT, FACE_RIGHT, FACE_TOP, FACE_BOTTOM,
+    LEFT_EYE_OUTER, RIGHT_EYE_OUTER, NOSE_LEFT, NOSE_RIGHT, MOUTH_LEFT, MOUTH_RIGHT,
+)
+
 
 def _point(landmarks: list[Landmark], index: int) -> tuple[float, float]:
     landmark = landmarks[index]
@@ -45,19 +50,7 @@ def _symmetry_delta(landmarks: list[Landmark], face_width: float) -> float:
 
 
 def calculate_face_ratios(landmarks: list[Landmark]) -> FaceRatios | None:
-    required_index = max(
-        FACE_LEFT,
-        FACE_RIGHT,
-        FACE_TOP,
-        FACE_BOTTOM,
-        LEFT_EYE_OUTER,
-        RIGHT_EYE_OUTER,
-        NOSE_LEFT,
-        NOSE_RIGHT,
-        MOUTH_LEFT,
-        MOUTH_RIGHT,
-    )
-    if len(landmarks) <= required_index:
+    if len(landmarks) <= REQUIRED_LANDMARK_INDEX:
         return None
 
     face_width = _distance(landmarks, FACE_LEFT, FACE_RIGHT)

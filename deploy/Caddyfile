@@ -2,5 +2,19 @@
 # DNS must point faceratioops.skyshine.online to the Droplet before reload.
 faceratioops.skyshine.online {
 	encode zstd gzip
+
+	request_body {
+		max_size 6MB
+	}
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	@metrics path /metrics
+	respond @metrics 403
+
 	reverse_proxy 127.0.0.1:8000
 }

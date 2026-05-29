@@ -9,6 +9,7 @@ from app.inference.ratios import (
     MOUTH_RIGHT,
     NOSE_LEFT,
     NOSE_RIGHT,
+    REQUIRED_LANDMARK_INDEX,
     RIGHT_EYE_OUTER,
 )
 from app.inference.schemas import (
@@ -18,22 +19,9 @@ from app.inference.schemas import (
     VisualizationOverlay,
 )
 
-REQUIRED_VISUALIZATION_INDEX = max(
-    FACE_LEFT,
-    FACE_RIGHT,
-    FACE_TOP,
-    FACE_BOTTOM,
-    LEFT_EYE_OUTER,
-    RIGHT_EYE_OUTER,
-    NOSE_LEFT,
-    NOSE_RIGHT,
-    MOUTH_LEFT,
-    MOUTH_RIGHT,
-)
-
 
 def calculate_visualization_overlay(landmarks: list[Landmark]) -> VisualizationOverlay | None:
-    if len(landmarks) <= REQUIRED_VISUALIZATION_INDEX:
+    if len(landmarks) <= REQUIRED_LANDMARK_INDEX:
         return None
 
     return VisualizationOverlay(

@@ -156,7 +156,7 @@ async def analyze(file: Annotated[UploadFile, File()]) -> AnalysisResponse:
 
     warnings = list(detection.warnings)
     ratios = calculate_face_ratios(detection.landmarks) if detection.landmarks else None
-    visualization = calculate_visualization_overlay(detection.landmarks) if ratios is not None else None
+    visualization = calculate_visualization_overlay(detection.landmarks) if detection.landmarks else None
     if ratios is None and detection.face_detected:
         warnings.append("ratio_calculation_unavailable")
 
