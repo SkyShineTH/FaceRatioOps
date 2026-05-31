@@ -8,7 +8,7 @@ COPY frontend/ ./
 RUN npm run build
 # Vite outDir "../app/static_dist" -> /build/app/static_dist
 
-FROM python:3.11-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
