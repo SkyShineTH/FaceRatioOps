@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import type { AnalysisResponse, StatusState } from "../types";
-import { analyzeImage } from "../api/client";
+import type { AnalysisResponse, RatioReference, StatusState } from "../types";
+import { analyzeImage, fetchReferences } from "../api/client";
 import OverlayCanvas from "./OverlayCanvas";
 import ResultPanel from "./ResultPanel";
 
@@ -31,7 +31,26 @@ export default function Workbench() {
   const [imageDims, setImageDims] = useState<ImageDimensions>({ naturalWidth: 0, naturalHeight: 0 });
   const [caption, setCaption] = useState(DEFAULT_CAPTION);
   const [analyzing, setAnalyzing] = useState(false);
+  const [references, setReferences] = useState<RatioReference[]>([]);
+  const [referenceDisclaimer, setReferenceDisclaimer] = useState<string>();
   const previewUrlRef = useRef<string | null>(null);
+
+  // Classical-canon reference bands are static; load them once for the result panel.
+  useEffect(() => {
+    let active = true;
+    fetchReferences()
+      .then((data) => {
+        if (!active) return;
+        setReferences(data.references);
+        setReferenceDisclaimer(data.disclaimer);
+      })
+      .catch(() => {
+        /* references are supplementary; the workbench still works without them */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Revoke the last object URL when it changes or the component unmounts.
   useEffect(() => {
@@ -158,7 +177,12 @@ export default function Workbench() {
         </button>
       </div>
 
-      <ResultPanel status={status} result={result} />
+      <ResultPanel
+        status={status}
+        result={result}
+        references={references}
+        referenceDisclaimer={referenceDisclaimer}
+      />
     </section>
   );
 }

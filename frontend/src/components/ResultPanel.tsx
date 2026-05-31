@@ -1,21 +1,12 @@
-import type { AnalysisResponse, FaceRatios, StatusState } from "../types";
+import type { AnalysisResponse, FaceRatios, RatioReference, StatusState } from "../types";
 import { RATIO_LABELS } from "../types";
 import DefinitionList, { type DefinitionEntry } from "./DefinitionList";
 
 interface ResultPanelProps {
   status: { message: string; state: StatusState };
   result: AnalysisResponse | null;
-}
-
-function ratioEntries(result: AnalysisResponse | null): DefinitionEntry[] {
-  const ratios = result?.ratios;
-  if (!ratios) {
-    return result ? [["Ratios", "Unavailable"]] : [["Awaiting analysis", "-"]];
-  }
-  return (Object.entries(ratios) as [keyof FaceRatios, number][]).map(([key, value]) => [
-    RATIO_LABELS[key] ?? key,
-    Number(value).toFixed(3),
-  ]);
+  references: RatioReference[];
+  referenceDisclaimer?: string;
 }
 
 function qualityEntries(result: AnalysisResponse | null): DefinitionEntry[] {
@@ -51,7 +42,42 @@ function overlayEntries(result: AnalysisResponse | null): DefinitionEntry[] {
   ];
 }
 
-export default function ResultPanel({ status, result }: ResultPanelProps) {
+function RatioReadings({
+  ratios,
+  references,
+}: {
+  ratios: FaceRatios;
+  references: RatioReference[];
+}) {
+  const refByField = new Map(references.map((ref) => [ref.field, ref]));
+  const rows = (Object.entries(ratios) as [keyof FaceRatios, number][]).map(([key, value]) => {
+    const ref = refByField.get(key);
+    const within = ref ? value >= ref.lower && value <= ref.upper : null;
+    return (
+      <div className="ratio-reading" key={key}>
+        <div className="ratio-reading-head">
+          <dt>{RATIO_LABELS[key] ?? key}</dt>
+          <dd>{Number(value).toFixed(3)}</dd>
+        </div>
+        {ref ? (
+          <p className={`ratio-ref ${within ? "within" : "outside"}`}>
+            <span className="ref-canon">{ref.canon}</span>
+            <span className="ref-band">
+              ref ~{ref.expected.toFixed(2)} ({ref.lower.toFixed(2)}–{ref.upper.toFixed(2)})
+            </span>
+            <span className="ref-state">{within ? "within reference band" : "outside reference band"}</span>
+          </p>
+        ) : null}
+      </div>
+    );
+  });
+  return <dl className="ratio-readings">{rows}</dl>;
+}
+
+export default function ResultPanel({ status, result, references, referenceDisclaimer }: ResultPanelProps) {
+  const ratios = result?.ratios ?? null;
+  const showReferences = !!ratios && references.length > 0;
+
   return (
     <div className="result-panel">
       <div className="panel-heading">
@@ -69,7 +95,17 @@ export default function ResultPanel({ status, result }: ResultPanelProps) {
       <div className="result-grid">
         <section className="result-section" aria-labelledby="ratios-title">
           <h3 id="ratios-title">Geometric ratios</h3>
-          <DefinitionList className="ratio-list" entries={ratioEntries(result)} />
+          {ratios ? (
+            <RatioReadings ratios={ratios} references={references} />
+          ) : (
+            <DefinitionList
+              className="ratio-list"
+              entries={[[result ? "Ratios" : "Awaiting analysis", result ? "Unavailable" : "-"]]}
+            />
+          )}
+          {showReferences && referenceDisclaimer ? (
+            <p className="ratio-ref-note">{referenceDisclaimer}</p>
+          ) : null}
         </section>
 
         <section className="result-section" aria-labelledby="quality-title">

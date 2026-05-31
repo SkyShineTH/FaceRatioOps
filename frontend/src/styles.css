@@ -385,6 +385,81 @@ dd {
   border-top: 1px solid var(--line);
 }
 
+/* Geometric ratios with classical-canon reference bands. */
+.ratio-readings {
+  display: grid;
+  gap: 12px;
+}
+
+.ratio-reading {
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
+}
+
+.ratio-reading:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.ratio-reading-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.ratio-reading-head dt {
+  color: var(--muted);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.ratio-reading-head dd {
+  margin: 0;
+  font-weight: 900;
+  text-align: right;
+}
+
+.ratio-ref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  margin: 6px 0 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.ratio-ref .ref-canon {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent-ink);
+}
+
+.ratio-ref .ref-state {
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.ratio-ref.within .ref-state {
+  border-color: color-mix(in oklch, var(--ok) 60%, var(--line));
+  color: color-mix(in oklch, var(--ok) 72%, var(--ink));
+}
+
+.ratio-ref.outside .ref-state {
+  border-color: color-mix(in oklch, var(--warning) 60%, var(--line));
+  color: color-mix(in oklch, var(--warning) 65%, var(--ink));
+}
+
+.ratio-ref-note {
+  margin: 14px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 /* Navigation between workbench and architecture views. */
 .site-nav {
   display: flex;

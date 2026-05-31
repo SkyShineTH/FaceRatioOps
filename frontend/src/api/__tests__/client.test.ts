@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { analyzeImage } from "../client";
+import { analyzeImage, fetchReferences } from "../client";
 
 const file = new File(["bytes"], "face.png", { type: "image/png" });
 
@@ -36,5 +36,18 @@ describe("analyzeImage", () => {
     );
 
     await expect(analyzeImage(file)).rejects.toThrow("Unsupported upload type.");
+  });
+});
+
+describe("fetchReferences", () => {
+  it("loads the reference bands from /references", async () => {
+    const payload = { references: [], disclaimer: "context only", sources: [] };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(payload) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchReferences();
+
+    expect(fetchMock).toHaveBeenCalledWith("/references");
+    expect(result).toEqual(payload);
   });
 });

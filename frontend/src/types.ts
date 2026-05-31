@@ -35,6 +35,21 @@ export interface VisualizationOverlay {
   measurement_segments: MeasurementSegment[];
 }
 
+export interface RatioReference {
+  field: string;
+  canon: string;
+  expected: number;
+  lower: number;
+  upper: number;
+  note: string;
+}
+
+export interface ReferencesResponse {
+  references: RatioReference[];
+  disclaimer: string;
+  sources: string[];
+}
+
 export interface ModelInfo {
   name: string;
   version: string;

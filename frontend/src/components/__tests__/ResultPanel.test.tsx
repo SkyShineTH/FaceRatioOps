@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import ResultPanel from "../ResultPanel";
-import type { AnalysisResponse } from "../../types";
+import type { AnalysisResponse, RatioReference } from "../../types";
 
 const sampleResult: AnalysisResponse = {
   face_detected: true,
@@ -26,16 +26,41 @@ const sampleResult: AnalysisResponse = {
   quality: { warnings: [], message: null, confidence: 0.97 },
 };
 
+const sampleReferences: RatioReference[] = [
+  {
+    field: "upper_third_ratio",
+    canon: "Rule of thirds",
+    expected: 0.333,
+    lower: 0.3,
+    upper: 0.37,
+    note: "Equal vertical bands.",
+  },
+  {
+    field: "nose_width_to_face_width",
+    canon: "Rule of fifths",
+    expected: 0.2,
+    lower: 0.17,
+    upper: 0.24,
+    note: "About one fifth.",
+  },
+];
+
 describe("ResultPanel", () => {
   it("shows placeholder content before any analysis", () => {
-    render(<ResultPanel status={{ message: "Select an image", state: "idle" }} result={null} />);
+    render(
+      <ResultPanel status={{ message: "Select an image", state: "idle" }} result={null} references={[]} />,
+    );
     expect(screen.getByText("Awaiting analysis")).toBeInTheDocument();
     expect(screen.getByText("None yet")).toBeInTheDocument();
   });
 
   it("renders ratios, model metadata, and overlay summary from a response", () => {
     render(
-      <ResultPanel status={{ message: "Analysis complete.", state: "ok" }} result={sampleResult} />,
+      <ResultPanel
+        status={{ message: "Analysis complete.", state: "ok" }}
+        result={sampleResult}
+        references={[]}
+      />,
     );
 
     expect(screen.getByText("Eye distance to face width")).toBeInTheDocument();
@@ -43,5 +68,22 @@ describe("ResultPanel", () => {
     expect(screen.getByText("MediaPipe Face Mesh")).toBeInTheDocument();
     expect(screen.getByText("Available")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Analysis complete.");
+  });
+
+  it("flags ratios as within or outside their classical reference band", () => {
+    render(
+      <ResultPanel
+        status={{ message: "Analysis complete.", state: "ok" }}
+        result={sampleResult}
+        references={sampleReferences}
+        referenceDisclaimer="Classical canons shown for context only; not ideals."
+      />,
+    );
+
+    // upper_third_ratio 0.3 is inside 0.30-0.37; nose 0.255 is outside 0.17-0.24.
+    expect(screen.getByText("within reference band")).toBeInTheDocument();
+    expect(screen.getByText("outside reference band")).toBeInTheDocument();
+    expect(screen.getAllByText(/Rule of/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/Classical canons shown for context/)).toBeInTheDocument();
   });
 });

@@ -17,6 +17,7 @@ from app.inference.landmarks import (
     get_mediapipe_version,
 )
 from app.inference.ratios import calculate_face_ratios
+from app.inference.references import get_reference_bands
 from app.inference.schemas import (
     AnalysisResponse,
     ErrorResponse,
@@ -24,6 +25,7 @@ from app.inference.schemas import (
     ModelInfo,
     ModelInfoResponse,
     QualityReport,
+    ReferencesResponse,
 )
 from app.inference.visualization import calculate_visualization_overlay
 
@@ -74,6 +76,11 @@ def model_info() -> ModelInfoResponse:
         capabilities=MODEL_CAPABILITIES,
         limitations=MODEL_LIMITATIONS,
     )
+
+
+@router.get("/references", response_model=ReferencesResponse)
+def references() -> ReferencesResponse:
+    return get_reference_bands()
 
 
 @router.get("/metrics", response_class=PlainTextResponse)

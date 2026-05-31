@@ -56,6 +56,31 @@ The three `*_third_ratio` fields express the classical vertical "rule of thirds"
 
 `symmetry_delta` is not a beauty, attractiveness, health, or diagnostic score. It is a small geometric proxy derived from selected landmark pairs and should be treated as approximate technical output only.
 
+## Reference Canons
+
+The `GET /references` endpoint returns classical facial proportion canons used as a
+neutral geometric reference. The workbench shows each measured ratio next to its canon
+band and a neutral "within / outside reference band" note.
+
+| Ratio | Canon | Expected | Band |
+| --- | --- | ---: | --- |
+| `upper_third_ratio` | Rule of thirds | 0.333 | 0.30–0.37 |
+| `middle_third_ratio` | Rule of thirds | 0.333 | 0.30–0.37 |
+| `lower_third_ratio` | Rule of thirds | 0.333 | 0.30–0.37 |
+| `eye_distance_to_face_width` | Rule of fifths | 0.60 | 0.55–0.66 |
+| `nose_width_to_face_width` | Rule of fifths | 0.20 | 0.17–0.24 |
+| `mouth_width_to_face_width` | Classical convention | 0.39 | 0.36–0.42 |
+
+These canons are historical drawing/anatomy conventions, not ideals, targets, beauty
+scores, or norms a face should match. The bands are illustrative tolerances, not
+pass/fail thresholds. Empirical anthropometry shows real faces commonly deviate from the
+neoclassical canons, so a measurement outside a band is a neutral geometric observation.
+
+Sources:
+
+- Neoclassical facial canons (Renaissance drawing tradition; codified by Powell & Humphreys, *Proportions of the Aesthetic Face*, 1984).
+- Farkas LG et al., *Vertical and horizontal proportions of the face in young adult North American Caucasians*, Plast Reconstr Surg, 1985 — documents how real faces deviate from the canons.
+
 ## Explainability Overlay
 
 The `visualization` response field contains normalized overlay geometry:

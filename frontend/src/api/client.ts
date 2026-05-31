@@ -1,4 +1,4 @@
-import type { AnalysisResponse } from "../types";
+import type { AnalysisResponse, ReferencesResponse } from "../types";
 
 interface ErrorBody {
   detail?: string;
@@ -25,4 +25,13 @@ export async function analyzeImage(file: File): Promise<AnalysisResponse> {
   }
 
   return body as AnalysisResponse;
+}
+
+/** Fetch the static classical-canon reference bands shown alongside measured ratios. */
+export async function fetchReferences(): Promise<ReferencesResponse> {
+  const response = await fetch("/references");
+  if (!response.ok) {
+    throw new Error(`Failed to load references (status ${response.status})`);
+  }
+  return (await response.json()) as ReferencesResponse;
 }

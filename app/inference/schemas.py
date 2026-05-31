@@ -35,6 +35,21 @@ class FaceRatios(BaseModel):
     lower_third_ratio: float = Field(ge=0)
 
 
+class RatioReference(BaseModel):
+    field: str
+    canon: str
+    expected: float = Field(ge=0)
+    lower: float = Field(ge=0)
+    upper: float = Field(ge=0)
+    note: str
+
+
+class ReferencesResponse(BaseModel):
+    references: list[RatioReference]
+    disclaimer: str
+    sources: list[str]
+
+
 class OverlayPoint(BaseModel):
     x: float = Field(ge=0, le=1)
     y: float = Field(ge=0, le=1)
