@@ -68,6 +68,11 @@ def _load_rgb_image(image_bytes: bytes) -> np.ndarray:
             if width * height > settings.max_image_pixels:
                 raise ImageTooLargeError("Image exceeds decoded pixel limit.")
             image = ImageOps.exif_transpose(image)
+            # Downscale before inference. Landmarks are normalized [0,1], so the ratios and
+            # overlay are unchanged, but this cuts model compute and peak memory on small hosts.
+            max_dimension = settings.max_inference_dimension
+            if max(image.size) > max_dimension:
+                image.thumbnail((max_dimension, max_dimension), Image.Resampling.LANCZOS)
             image.load()
             return np.ascontiguousarray(np.asarray(image.convert("RGB")))
     except ImageTooLargeError:

@@ -63,6 +63,17 @@ def test_load_rgb_image_accepts_webp_when_pillow_supports_it() -> None:
     assert image.flags.c_contiguous
 
 
+def test_load_rgb_image_downscales_oversized_images_to_max_dimension() -> None:
+    # Below the pixel-bomb limit but larger than the inference dimension -> should downscale.
+    image = landmarks._load_rgb_image(_image_bytes("PNG", size=(2048, 1024)))
+
+    height, width, channels = image.shape
+    assert max(width, height) == 1024
+    assert (width, height) == (1024, 512)
+    assert channels == 3
+    assert image.flags.c_contiguous
+
+
 def test_load_rgb_image_rejects_invalid_image_bytes() -> None:
     with pytest.raises(ValueError, match="Upload a readable JPEG, PNG, or WebP image"):
         landmarks._load_rgb_image(b"not-an-image")

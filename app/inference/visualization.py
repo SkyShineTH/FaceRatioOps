@@ -1,5 +1,6 @@
 from app.inference.landmarks import Landmark
 from app.inference.ratios import (
+    BROW_CENTER,
     FACE_BOTTOM,
     FACE_LEFT,
     FACE_RIGHT,
@@ -7,6 +8,7 @@ from app.inference.ratios import (
     LEFT_EYE_OUTER,
     MOUTH_LEFT,
     MOUTH_RIGHT,
+    NOSE_BASE,
     NOSE_LEFT,
     NOSE_RIGHT,
     REQUIRED_LANDMARK_INDEX,
@@ -32,7 +34,25 @@ def calculate_visualization_overlay(landmarks: list[Landmark]) -> VisualizationO
             _segment("eye_distance", "Eye distance segment", landmarks, LEFT_EYE_OUTER, RIGHT_EYE_OUTER),
             _segment("nose_width", "Nose width segment", landmarks, NOSE_LEFT, NOSE_RIGHT),
             _segment("mouth_width", "Mouth width segment", landmarks, MOUTH_LEFT, MOUTH_RIGHT),
+            _horizontal_division("upper_third_line", "Upper third division (brow)", landmarks, BROW_CENTER),
+            _horizontal_division("lower_third_line", "Lower third division (nose base)", landmarks, NOSE_BASE),
         ],
+    )
+
+
+def _horizontal_division(
+    name: str,
+    label: str,
+    landmarks: list[Landmark],
+    level_index: int,
+) -> MeasurementSegment:
+    """A horizontal rule-of-thirds line spanning the face width at a division landmark's height."""
+    level_y = _clamp(landmarks[level_index].y)
+    return MeasurementSegment(
+        name=name,
+        label=label,
+        start=OverlayPoint(x=_clamp(landmarks[FACE_LEFT].x), y=level_y),
+        end=OverlayPoint(x=_clamp(landmarks[FACE_RIGHT].x), y=level_y),
     )
 
 

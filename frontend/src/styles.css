@@ -102,6 +102,13 @@ h1 {
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ops-strip a:hover,
+.ops-strip a:focus-visible {
+  border-color: var(--accent);
 }
 
 .workspace {
@@ -217,7 +224,7 @@ h2 {
   background: oklch(18% 0.025 238);
 }
 
-#overlay-canvas {
+.overlay-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -378,10 +385,247 @@ dd {
   border-top: 1px solid var(--line);
 }
 
+/* Geometric ratios with classical-canon reference bands. */
+.ratio-readings {
+  display: grid;
+  gap: 12px;
+}
+
+.ratio-reading {
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
+}
+
+.ratio-reading:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.ratio-reading-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: baseline;
+}
+
+.ratio-reading-head dt {
+  color: var(--muted);
+  font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.ratio-reading-head dd {
+  margin: 0;
+  font-weight: 900;
+  text-align: right;
+}
+
+.ratio-ref {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  margin: 6px 0 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.ratio-ref .ref-canon {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent-ink);
+}
+
+.ratio-ref .ref-state {
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.ratio-ref.within .ref-state {
+  border-color: color-mix(in oklch, var(--ok) 60%, var(--line));
+  color: color-mix(in oklch, var(--ok) 72%, var(--ink));
+}
+
+.ratio-ref.outside .ref-state {
+  border-color: color-mix(in oklch, var(--warning) 60%, var(--line));
+  color: color-mix(in oklch, var(--warning) 65%, var(--ink));
+}
+
+.ratio-ref-note {
+  margin: 14px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Navigation between workbench and architecture views. */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: clamp(18px, 3vw, 28px);
+}
+
+.site-nav a {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--panel) 78%, transparent);
+  color: var(--accent-ink);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+}
+
+.site-nav a.active {
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
+  color: var(--paper);
+}
+
+.site-nav a:hover:not(.active),
+.site-nav a:focus-visible {
+  border-color: var(--accent);
+}
+
+/* Interactive architecture diagram. */
+.architecture-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: clamp(18px, 3vw, 32px);
+  align-items: start;
+}
+
+.architecture-stage {
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--panel) 90%, transparent);
+  box-shadow: var(--shadow);
+  padding: clamp(14px, 2.2vw, 22px);
+}
+
+.architecture-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.arch-node {
+  cursor: pointer;
+}
+
+.arch-node-box {
+  fill: var(--panel-strong);
+  stroke: var(--line);
+  stroke-width: 1.5;
+  transition: fill 160ms ease, stroke 160ms ease, opacity 160ms ease;
+}
+
+.arch-node-label {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.arch-node-kind {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.arch-edge {
+  fill: none;
+  stroke: color-mix(in oklch, var(--ink) 45%, transparent);
+  stroke-width: 2;
+  transition: stroke 160ms ease, opacity 160ms ease;
+}
+
+.arch-edge.monitoring {
+  stroke-dasharray: 7 6;
+}
+
+/* Highlight state: dim everything, then re-light the active node + its edges. */
+.architecture-svg.has-active .arch-node-box,
+.architecture-svg.has-active .arch-edge {
+  opacity: 0.28;
+}
+
+.arch-node.active .arch-node-box {
+  opacity: 1;
+  fill: color-mix(in oklch, var(--accent) 16%, var(--panel-strong));
+  stroke: var(--accent-ink);
+  stroke-width: 2.5;
+}
+
+.arch-edge.active {
+  opacity: 1;
+  stroke: var(--accent-ink);
+  stroke-width: 3;
+}
+
+.arch-node:focus-visible {
+  outline: none;
+}
+
+.arch-node:focus-visible .arch-node-box {
+  stroke: var(--accent-ink);
+  stroke-width: 2.5;
+}
+
+.architecture-detail {
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--panel) 82%, var(--paper));
+  padding: clamp(16px, 2.2vw, 22px);
+  position: sticky;
+  top: 24px;
+}
+
+.architecture-detail .detail-kind {
+  margin: 0 0 6px;
+  color: var(--accent-ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.architecture-detail h2 {
+  margin-bottom: 10px;
+}
+
+.architecture-detail p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.architecture-detail .detail-tech {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.architecture-detail .detail-tech span {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--panel) 78%, transparent);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 @media (max-width: 860px) {
   .intro,
   .workspace,
-  .safety-band {
+  .safety-band,
+  .architecture-layout {
     grid-template-columns: 1fr;
   }
 
@@ -392,6 +636,10 @@ dd {
 
   .result-grid {
     grid-template-columns: 1fr;
+  }
+
+  .architecture-detail {
+    position: static;
   }
 }
 
