@@ -10,7 +10,10 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.metrics import MetricsRegistry
 
-STATIC_DIR = Path(__file__).resolve().parent / "static"
+# Built React (Vite) frontend output. Produced by `cd frontend && npm run build`
+# and, in production, by the Docker frontend build stage.
+STATIC_DIST = Path(__file__).resolve().parent / "static_dist"
+SPA_INDEX = STATIC_DIST / "index.html"
 
 
 def create_app() -> FastAPI:
@@ -23,11 +26,11 @@ def create_app() -> FastAPI:
         description="Privacy-first AI inference API for facial geometry analysis.",
     )
     app.state.metrics = MetricsRegistry()
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount("/static_dist", StaticFiles(directory=STATIC_DIST), name="static_dist")
 
     @app.get("/", include_in_schema=False)
     def frontend() -> FileResponse:
-        return FileResponse(STATIC_DIR / "index.html")
+        return FileResponse(SPA_INDEX)
 
     @app.middleware("http")
     async def record_request_metrics(request, call_next):
@@ -44,6 +47,13 @@ def create_app() -> FastAPI:
         return response
 
     app.include_router(router)
+
+    # SPA fallback: client-side routes (e.g. /architecture) must return the app shell.
+    # Registered last so explicit API routes and mounts take precedence.
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa_fallback(full_path: str) -> FileResponse:  # noqa: ARG001
+        return FileResponse(SPA_INDEX)
+
     return app
 
 
