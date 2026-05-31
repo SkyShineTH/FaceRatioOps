@@ -26,26 +26,18 @@ See [docs/measurement-definitions.md](docs/measurement-definitions.md) for landm
 
 ## Architecture
 
-```text
-Client / Postman / curl
-        |
-        v
-Cloudflare DNS / HTTPS
-        |
-        v
-DigitalOcean Droplet + Caddy reverse proxy
-        |
-        v
-Docker Compose FastAPI Inference API
-        |
-        v
-MediaPipe Face Landmark Adapter
-        |
-        v
-Ratio Calculator
-        |
-        v
-JSON Response + Structured Logs + Health Checks
+```mermaid
+flowchart TD
+    Client["Client / Postman / curl"] --> CF["Cloudflare DNS / HTTPS"]
+    CF --> Caddy["DigitalOcean Droplet<br/>Caddy reverse proxy"]
+    Caddy --> API["Docker Compose<br/>FastAPI Inference API"]
+    API --> MP["MediaPipe Face Landmark Adapter"]
+    MP --> Calc["Ratio Calculator"]
+    Calc --> Resp["JSON Response + Structured Logs + Health Checks"]
+
+    API -. /metrics .-> Prom["Prometheus"]
+    Node["Node Exporter<br/>(Droplet host metrics)"] -. host metrics .-> Prom
+    Prom --> Graf["Grafana Dashboards"]
 ```
 
 Operations monitoring uses Prometheus to scrape API `/metrics`, Node Exporter to expose Droplet host metrics, and Grafana dashboards to visualize request rate, latency, status/error rate, scrape health, CPU, memory, disk, and network usage.
@@ -71,6 +63,7 @@ The service originally supported a temporary 512 MB budget Droplet by pulling th
 ## Tech Stack
 
 - Backend: FastAPI
+- Frontend: React + Vite + TypeScript (built bundle served by FastAPI)
 - Inference: MediaPipe Face Mesh adapter through the `inference` extra
 - Image processing: Pillow, NumPy
 - Validation: Pydantic
@@ -172,13 +165,45 @@ http://127.0.0.1:8000/health
 http://127.0.0.1:8000/docs
 ```
 
-The static workbench is available at:
+### Frontend (React + Vite + TypeScript)
 
-```text
-http://127.0.0.1:8000/
+The workbench is a React single-page app in `frontend/`. FastAPI serves the built
+output (`app/static_dist/`) at `/`, so the production deployment stays a single
+container — no separate frontend service.
+
+For day-to-day frontend work, run the API on port 8000 and the Vite dev server
+alongside it (the dev server proxies `/analyze`, `/health`, `/model-info`, and
+`/metrics` to the API):
+
+```powershell
+# Terminal 1: API
+uvicorn app.main:app --reload
+
+# Terminal 2: frontend dev server with hot reload
+cd frontend
+npm install
+npm run dev
 ```
 
-It lets you choose a local image, preview it in the browser, submit it to `/analyze`, and inspect technical geometry results with an explainability overlay without adding a separate frontend service.
+To produce the served bundle (also what the API tests and Docker image use):
+
+```powershell
+cd frontend
+npm run build   # outputs to ../app/static_dist
+```
+
+After building, the full workbench and the interactive architecture diagram are
+available from the API itself:
+
+```text
+http://127.0.0.1:8000/               # workbench
+http://127.0.0.1:8000/architecture   # interactive deployment diagram
+```
+
+The workbench lets you choose a local image, preview it in the browser, submit it to
+`/analyze`, and inspect technical geometry results with an explainability overlay.
+The Docker image builds the frontend in a Node stage and copies the bundle into the
+runtime image, so `app/static_dist/` does not need to be committed.
 
 ## Manual Real-Image Verification
 
