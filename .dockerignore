@@ -20,3 +20,8 @@ dist
 *.log
 .DS_Store
 Thumbs.db
+
+# Frontend: send source to the build stage, but rebuild deps and SPA output there
+frontend/node_modules
+frontend/dist
+app/static_dist

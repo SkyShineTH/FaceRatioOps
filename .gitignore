@@ -27,6 +27,12 @@ dist/
 !.env.production.example
 !.env.production.512mb.example
 
+# Frontend (React + Vite)
+frontend/node_modules/
+frontend/dist/
+# Built SPA output served by FastAPI (produced by `npm run build` / Docker build stage)
+app/static_dist/
+
 # Runtime and OS noise
 *.log
 .DS_Store

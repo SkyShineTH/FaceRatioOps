@@ -1,3 +1,13 @@
+# Stage 1: build the React (Vite) frontend into app/static_dist.
+FROM node:20-slim AS frontend-build
+
+WORKDIR /build/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+# Vite outDir "../app/static_dist" -> /build/app/static_dist
+
 FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -29,6 +39,9 @@ RUN python -m pip install --retries 5 --timeout 120 --upgrade pip \
         "protobuf>=4.25.3,<5" \
         "sentencepiece" \
         "sounddevice>=0.4.4"
+
+# Built SPA from the frontend stage, served by FastAPI at "/".
+COPY --from=frontend-build /build/app/static_dist ./app/static_dist
 
 ENV MPLCONFIGDIR=/tmp/matplotlib \
     XDG_CACHE_HOME=/tmp/.cache
