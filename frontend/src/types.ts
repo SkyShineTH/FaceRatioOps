@@ -6,6 +6,9 @@ export interface FaceRatios {
   nose_width_to_face_width: number;
   mouth_width_to_face_width: number;
   symmetry_delta: number;
+  upper_third_ratio: number;
+  middle_third_ratio: number;
+  lower_third_ratio: number;
 }
 
 export interface OverlayPoint {
@@ -60,4 +63,7 @@ export const RATIO_LABELS: Record<keyof FaceRatios, string> = {
   nose_width_to_face_width: "Nose width to face width",
   mouth_width_to_face_width: "Mouth width to face width",
   symmetry_delta: "Symmetry delta",
+  upper_third_ratio: "Upper third (forehead–brow)",
+  middle_third_ratio: "Middle third (brow–nose base)",
+  lower_third_ratio: "Lower third (nose base–chin)",
 };

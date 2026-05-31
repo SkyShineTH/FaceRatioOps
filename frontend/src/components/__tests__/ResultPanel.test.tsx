@@ -13,6 +13,9 @@ const sampleResult: AnalysisResponse = {
     nose_width_to_face_width: 0.255,
     mouth_width_to_face_width: 0.38,
     symmetry_delta: 0.014,
+    upper_third_ratio: 0.3,
+    middle_third_ratio: 0.35,
+    lower_third_ratio: 0.35,
   },
   visualization: {
     bounding_box: { x_min: 0.1, y_min: 0.1, x_max: 0.9, y_max: 0.9 },

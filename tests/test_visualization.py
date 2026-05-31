@@ -44,10 +44,18 @@ def test_calculate_visualization_overlay_from_landmarks() -> None:
         "eye_distance",
         "nose_width",
         "mouth_width",
+        "upper_third_line",
+        "lower_third_line",
     ]
     assert overlay.measurement_segments[0].label == "Face width segment"
     assert overlay.measurement_segments[0].start.x == 0.2
     assert overlay.measurement_segments[0].end.x == 0.8
+
+    # Rule-of-thirds division lines span the face width at the division landmark's height.
+    upper_line = overlay.measurement_segments[5]
+    assert upper_line.start.x == 0.2
+    assert upper_line.end.x == 0.8
+    assert upper_line.start.y == upper_line.end.y
 
 
 def test_calculate_visualization_overlay_returns_none_when_landmarks_are_incomplete() -> None:

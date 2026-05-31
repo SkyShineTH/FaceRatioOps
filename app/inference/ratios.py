@@ -13,10 +13,14 @@ NOSE_LEFT = 49
 NOSE_RIGHT = 279
 MOUTH_LEFT = 61
 MOUTH_RIGHT = 291
+# Vertical "rule of thirds" division points (proxies, see measurement-definitions.md).
+BROW_CENTER = 9
+NOSE_BASE = 2
 
 REQUIRED_LANDMARK_INDEX = max(
     FACE_LEFT, FACE_RIGHT, FACE_TOP, FACE_BOTTOM,
     LEFT_EYE_OUTER, RIGHT_EYE_OUTER, NOSE_LEFT, NOSE_RIGHT, MOUTH_LEFT, MOUTH_RIGHT,
+    BROW_CENTER, NOSE_BASE,
 )
 
 
@@ -59,10 +63,18 @@ def calculate_face_ratios(landmarks: list[Landmark]) -> FaceRatios | None:
     nose_width = _distance(landmarks, NOSE_LEFT, NOSE_RIGHT)
     mouth_width = _distance(landmarks, MOUTH_LEFT, MOUTH_RIGHT)
 
+    # Vertical thirds (rule of thirds): forehead-top -> brow -> nose base -> chin.
+    upper_third = _distance(landmarks, FACE_TOP, BROW_CENTER)
+    middle_third = _distance(landmarks, BROW_CENTER, NOSE_BASE)
+    lower_third = _distance(landmarks, NOSE_BASE, FACE_BOTTOM)
+
     return FaceRatios(
         face_width_to_height=_safe_ratio(face_width, face_height),
         eye_distance_to_face_width=_safe_ratio(eye_distance, face_width),
         nose_width_to_face_width=_safe_ratio(nose_width, face_width),
         mouth_width_to_face_width=_safe_ratio(mouth_width, face_width),
         symmetry_delta=_symmetry_delta(landmarks, face_width),
+        upper_third_ratio=_safe_ratio(upper_third, face_height),
+        middle_third_ratio=_safe_ratio(middle_third, face_height),
+        lower_third_ratio=_safe_ratio(lower_third, face_height),
     )

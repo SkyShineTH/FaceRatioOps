@@ -13,6 +13,9 @@ def test_calculate_face_ratios_from_landmarks(complete_landmarks: list[Landmark]
     assert ratios.nose_width_to_face_width == pytest.approx(0.1667)
     assert ratios.mouth_width_to_face_width == pytest.approx(0.3333)
     assert ratios.symmetry_delta == pytest.approx(0.0)
+    assert ratios.upper_third_ratio == pytest.approx(0.25)
+    assert ratios.middle_third_ratio == pytest.approx(0.375)
+    assert ratios.lower_third_ratio == pytest.approx(0.375)
 
 
 def test_calculate_face_ratios_returns_none_when_landmarks_are_incomplete() -> None:

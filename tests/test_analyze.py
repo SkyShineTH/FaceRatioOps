@@ -76,6 +76,8 @@ def test_analyze_returns_ratios_for_single_detected_face(monkeypatch, complete_l
         "eye_distance",
         "nose_width",
         "mouth_width",
+        "upper_third_line",
+        "lower_third_line",
     ]
     assert body["quality"] == {"warnings": [], "message": None, "confidence": 0.98}
 

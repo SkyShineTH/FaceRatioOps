@@ -30,6 +30,9 @@ class FaceRatios(BaseModel):
     nose_width_to_face_width: float = Field(ge=0)
     mouth_width_to_face_width: float = Field(ge=0)
     symmetry_delta: float = Field(ge=0)
+    upper_third_ratio: float = Field(ge=0)
+    middle_third_ratio: float = Field(ge=0)
+    lower_third_ratio: float = Field(ge=0)
 
 
 class OverlayPoint(BaseModel):
