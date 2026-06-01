@@ -124,9 +124,18 @@ jobs:
           BASE_URL="${PUBLIC_BASE_URL%/}"
           curl -fsS "$BASE_URL/health"
           curl -fsS "$BASE_URL/model-info"
-          curl -fsS "$BASE_URL/metrics"
           curl -fsS -o /dev/null "$BASE_URL/docs"
           curl -fsS -o /dev/null "$BASE_URL/"
+
+          # /metrics is intentionally blocked at the edge (deploy/Caddyfile responds 403);
+          # Prometheus scrapes it internally. Verify it stays private rather than expecting 200.
+          # Internal reachability is already checked on the Droplet via localhost above.
+          metrics_status="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/metrics")"
+          if [ "$metrics_status" != "403" ]; then
+            echo "Expected public /metrics to be blocked with 403, got $metrics_status"
+            exit 1
+          fi
+          echo "Public /metrics correctly blocked (403)."
 
       - name: Remove SSH key
         if: always()
