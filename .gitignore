@@ -38,6 +38,14 @@ app/static_dist/
 .DS_Store
 Thumbs.db
 
+# Visual assets
+# docs/screenshots/ and docs/demo-images/ are intentionally tracked (committed
+# UI screenshots and AI-generated synthetic demo faces). Keep ad-hoc scratch
+# captures out of the repo. Never commit real face images.
+/screenshot*.png
+/screenshots/
+*.scratch.png
+
 # Editor
 .idea/
 .vscode/
