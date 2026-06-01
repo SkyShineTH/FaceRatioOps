@@ -42,6 +42,33 @@ flowchart TD
 
 Operations monitoring uses Prometheus to scrape API `/metrics`, Node Exporter to expose Droplet host metrics, and Grafana dashboards to visualize request rate, latency, status/error rate, scrape health, CPU, memory, disk, and network usage.
 
+## Screenshots
+
+Captured from the public deployment at <https://faceratioops.skyshine.online/>.
+
+### Inference workbench
+
+The browser workbench in its guided empty state. Choose a local image, preview it,
+submit it to `/analyze`, and inspect geometric ratios with an explainability overlay.
+
+![FaceRatioOps inference workbench](docs/screenshots/workbench.png)
+
+### Architecture view
+
+The interactive deployment topology at `/architecture`. Hover or focus a node to
+highlight its connections and read what each service does.
+
+![FaceRatioOps architecture view](docs/screenshots/architecture.png)
+
+### API documentation
+
+The OpenAPI / Swagger UI at `/docs`.
+
+![FaceRatioOps API documentation](docs/screenshots/api-docs.png)
+
+More screenshots and capture instructions are in
+[docs/screenshots/](docs/screenshots/README.md).
+
 ## Project Status
 
 FaceRatioOps is publicly deployed as a production-style portfolio service on DigitalOcean with HTTPS, reverse proxying, container health checks, public operational endpoints, GitHub Actions deployment, rollback documentation, and monitoring evidence.
@@ -207,7 +234,7 @@ runtime image, so `app/static_dist/` does not need to be committed.
 
 ## Manual Real-Image Verification
 
-Use a local JPEG, PNG, or WebP image with exactly one visible face. Do not commit real face images to the repository.
+Use a local JPEG, PNG, or WebP image with exactly one visible face. Do not commit real face images to the repository. For a committable example, the repository ships AI-generated synthetic faces in [docs/demo-images/](docs/demo-images/README.md); these depict no real person and are safe to use for `/analyze` and workbench demos.
 
 Run the API locally with MediaPipe installed:
 
