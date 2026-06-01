@@ -90,7 +90,7 @@ jobs:
         run: docker build -t faceratioops:ci .
 
       - name: Generate SBOM (Syft)
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@v0.24.0
         with:
           image: faceratioops:ci
           format: spdx-json
@@ -103,7 +103,7 @@ jobs:
           path: faceratioops-sbom.spdx.json
 
       - name: Scan image for vulnerabilities (Trivy, SARIF)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: faceratioops:ci
           format: sarif
@@ -119,7 +119,7 @@ jobs:
           category: trivy-image
 
       - name: Fail on fixable CRITICAL/HIGH vulnerabilities
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: faceratioops:ci
           format: table
