@@ -13,10 +13,25 @@ services:
       - "127.0.0.1:9090:9090"
     volumes:
       - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     depends_on:
       api:
         condition: service_healthy
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    profiles:
+      - monitoring
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    expose:
+      - "9093"
+    volumes:
+      - ./deploy/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
 
   node-exporter:
     image: prom/node-exporter:v1.8.2
@@ -52,3 +67,4 @@ services:
 volumes:
   prometheus-data:
   grafana-data:
+  alertmanager-data:

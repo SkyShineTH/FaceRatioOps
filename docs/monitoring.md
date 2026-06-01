@@ -10,10 +10,18 @@ Monitoring must remain operational-only. Do not add image payloads, uploaded fil
 | --- | --- |
 | `docker-compose.monitoring.yml` | Optional Compose override for Prometheus, Grafana, and Node Exporter. |
 | `.env.monitoring.example` | Non-secret Grafana defaults to copy into `.env.monitoring`. |
-| `deploy/prometheus/prometheus.yml` | Prometheus scrape config for `api:8000/metrics`. |
+| `deploy/prometheus/prometheus.yml` | Prometheus scrape config, `rule_files`, and Alertmanager target. |
+| `deploy/prometheus/rules/recording.yml` | Recording rules that precompute the SLIs. |
+| `deploy/prometheus/rules/alerts.yml` | SLO burn-rate and operational alerting rules. |
+| `deploy/alertmanager/alertmanager.yml` | Alertmanager routing (no-op default receiver; add a webhook on the host). |
 | `deploy/grafana/provisioning/datasources/prometheus.yml` | Grafana Prometheus datasource provisioning. |
 | `deploy/grafana/provisioning/dashboards/faceratioops.yml` | Grafana dashboard provider. |
 | `deploy/grafana/dashboards/faceratioops-overview.json` | Operations dashboard JSON. |
+
+The SLIs, SLOs, error budget, and burn-rate alerting policy are documented in
+[`docs/slo.md`](slo.md). The API exposes request latency as a Prometheus **histogram**
+(`faceratioops_http_request_duration_seconds_bucket`), which is what makes p95/p99 and the
+latency SLO computable rather than just an average.
 
 The API metrics exposed by FaceRatioOps use only `method`, `path`, and `status` labels. Prometheus will also attach its standard scrape labels such as `job` and `instance`; do not add custom labels containing user, image, or biometric data.
 
@@ -130,6 +138,18 @@ Panels:
 - Request rate by route and status
 - Average request duration by route
 - Status rate
+- Analyze latency percentiles (p95/p99) with the 1.5s SLO threshold
+- Analyze p95 (current)
+- 30-day availability vs the 99.5% SLO
+
+## Alerting
+
+Prometheus loads the rules in `deploy/prometheus/rules/` and evaluates burn-rate and
+operational alerts against the SLOs in [`docs/slo.md`](slo.md). View alert state in the
+Prometheus **Alerts** tab. Firing alerts are sent to Alertmanager; the committed config
+uses a no-op receiver so nothing is wired to a real channel by default. To notify, add a
+`slack_configs`/`webhook_configs` receiver in `deploy/alertmanager/alertmanager.yml` on
+the host and keep the webhook URL out of git.
 
 For Droplet host resource visibility, import the community Grafana dashboard `Node Exporter Full` with dashboard ID `1860` and select the provisioned `Prometheus` datasource. It requires the `node-exporter` target to be healthy in Prometheus.
 

@@ -1,0 +1,81 @@
+# Alerting rules.
+#
+# Availability SLO: 99.5% of HTTP responses are non-5xx over a 30-day window,
+# leaving a 0.5% error budget. Multi-window, multi-burn-rate alerts (Google SRE
+# workbook) page only when the budget is being spent fast enough to matter, which
+# keeps noise low on a low-traffic portfolio service.
+#
+# Burn rate = (error ratio) / (error budget). A burn rate of 1 exhausts the budget
+# exactly over the 30-day window; 14.4 exhausts it in ~2 days.
+groups:
+  - name: faceratioops-availability-slo
+    rules:
+      - alert: FaceRatioOpsErrorBudgetBurnFast
+        # 14.4x burn over both 1h and 5m windows: ~2% of the 30d budget per hour.
+        expr: |
+          job:faceratioops_http_error_ratio:rate1h > (14.4 * 0.005)
+          and
+          job:faceratioops_http_error_ratio:rate5m > (14.4 * 0.005)
+        for: 2m
+        labels:
+          severity: page
+          slo: availability
+        annotations:
+          summary: "FaceRatioOps is burning its error budget fast (14.4x)"
+          description: >-
+            5xx ratio over both 1h and 5m exceeds 14.4x the 0.5% budget.
+            At this rate the 30-day error budget is gone in ~2 days. Check the
+            API container, recent deploy, and upstream (Caddy/Cloudflare).
+
+      - alert: FaceRatioOpsErrorBudgetBurnSlow
+        # 6x burn over both 6h and 30m windows: a slower, ticket-worthy leak.
+        expr: |
+          job:faceratioops_http_error_ratio:rate6h > (6 * 0.005)
+          and
+          job:faceratioops_http_error_ratio:rate30m > (6 * 0.005)
+        for: 15m
+        labels:
+          severity: ticket
+          slo: availability
+        annotations:
+          summary: "FaceRatioOps error budget burning (6x)"
+          description: >-
+            5xx ratio over both 6h and 30m exceeds 6x the 0.5% budget. Investigate
+            within working hours before it escalates.
+
+  - name: faceratioops-latency-slo
+    rules:
+      - alert: FaceRatioOpsAnalyzeLatencyHigh
+        # Latency SLO: 95% of /analyze requests complete within 1.5s.
+        expr: path:faceratioops_analyze_duration_seconds:p95_5m > 1.5
+        for: 10m
+        labels:
+          severity: ticket
+          slo: latency
+        annotations:
+          summary: "FaceRatioOps /analyze p95 latency above 1.5s SLO"
+          description: >-
+            p95 of /analyze over 5m has exceeded the 1.5s objective for 10m.
+            Likely causes: oversized uploads bypassing downscale, CPU contention
+            on the Droplet, or a cold MediaPipe model.
+
+  - name: faceratioops-operational
+    rules:
+      - alert: FaceRatioOpsTargetDown
+        expr: up{job="faceratioops-api"} == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "FaceRatioOps API target is down"
+          description: "Prometheus cannot scrape faceratioops-api:8000/metrics. The API or its container may be down."
+
+      - alert: HostMemoryLow
+        expr: |
+          (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) < 0.10
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Droplet available memory below 10%"
+          description: "Host memory headroom is under 10% for 5m. Risk of OOM-killing the API on a small Droplet."
