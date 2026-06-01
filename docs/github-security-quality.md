@@ -7,12 +7,24 @@ This checklist captures the repository security and quality setup for FaceRatioO
 | Control | File |
 | --- | --- |
 | CI lint, tests, and Docker build | `.github/workflows/ci.yml` |
+| Image vulnerability scan (Trivy) + SBOM (Syft) | `.github/workflows/ci.yml` (backend job) |
+| Monitoring rule + Terraform validation | `.github/workflows/ci.yml` (config-validate job) |
 | GHCR image publish | `.github/workflows/publish-image.yml` |
 | Manual production deployment | `.github/workflows/deploy.yml` |
 | CodeQL advanced setup for Python | `.github/workflows/codeql.yml` |
 | Dependabot version updates | `.github/dependabot.yml` |
 
-CI has read-only `GITHUB_TOKEN` permissions. The manual deploy workflow is `workflow_dispatch` only and uses SSH secrets scoped to GitHub Actions.
+CI builds the production image, generates an SPDX SBOM (uploaded as an artifact), and
+scans it with Trivy. CRITICAL and HIGH findings are uploaded as SARIF to GitHub code
+scanning for visibility and triage. The build **gates on fixable CRITICAL only**
+(`ignore-unfixed: true`); HIGH and below are reported but non-blocking. This is deliberate:
+some fixable HIGHs come from transitive/build packages, and `protobuf` is pinned to `<5`
+by MediaPipe 0.10.21, so a HIGH gate would be permanently red and meaningless. The
+`config-validate` job runs `promtool check rules` on the Prometheus alerting/recording
+rules and `terraform fmt -check` + `terraform validate` on the infrastructure code.
+
+CI has read-only `GITHUB_TOKEN` permissions by default; the backend job additionally
+requests `security-events: write` only to upload the Trivy SARIF report. The manual deploy workflow is `workflow_dispatch` only and uses SSH secrets scoped to GitHub Actions.
 
 ## GitHub Settings To Enable
 

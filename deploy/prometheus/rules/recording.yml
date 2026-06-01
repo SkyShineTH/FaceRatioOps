@@ -1,0 +1,41 @@
+# Recording rules precompute the SLIs the dashboard and burn-rate alerts depend on,
+# so panels stay fast and alert expressions stay readable.
+groups:
+  - name: faceratioops-sli
+    interval: 30s
+    rules:
+      # Throughput across all routes.
+      - record: job:faceratioops_http_requests:rate5m
+        expr: sum(rate(faceratioops_http_requests_total[5m]))
+
+      # Availability SLI: fraction of successful (non-5xx) responses over rolling windows.
+      - record: job:faceratioops_http_error_ratio:rate5m
+        expr: |
+          sum(rate(faceratioops_http_requests_total{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(faceratioops_http_requests_total[5m])), 0.001)
+      - record: job:faceratioops_http_error_ratio:rate30m
+        expr: |
+          sum(rate(faceratioops_http_requests_total{status=~"5.."}[30m]))
+          / clamp_min(sum(rate(faceratioops_http_requests_total[30m])), 0.001)
+      - record: job:faceratioops_http_error_ratio:rate1h
+        expr: |
+          sum(rate(faceratioops_http_requests_total{status=~"5.."}[1h]))
+          / clamp_min(sum(rate(faceratioops_http_requests_total[1h])), 0.001)
+      - record: job:faceratioops_http_error_ratio:rate6h
+        expr: |
+          sum(rate(faceratioops_http_requests_total{status=~"5.."}[6h]))
+          / clamp_min(sum(rate(faceratioops_http_requests_total[6h])), 0.001)
+
+      # Latency SLI: p95/p99 of the heavy /analyze path, derived from histogram buckets.
+      - record: path:faceratioops_analyze_duration_seconds:p95_5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(faceratioops_http_request_duration_seconds_bucket{path="/analyze"}[5m]))
+          )
+      - record: path:faceratioops_analyze_duration_seconds:p99_5m
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (le) (rate(faceratioops_http_request_duration_seconds_bucket{path="/analyze"}[5m]))
+          )
