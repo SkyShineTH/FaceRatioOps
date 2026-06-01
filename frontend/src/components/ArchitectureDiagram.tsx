@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 interface ArchNode {
   id: string;
@@ -134,6 +134,66 @@ const EDGES: ArchEdge[] = [
   { from: "prometheus", to: "grafana", monitoring: true },
 ];
 
+// Small per-node glyphs drawn in a 0..20 box; stroke/color are inherited from
+// `.arch-node-icon` so they brighten with the active state. Monitoring nodes share a chart.
+const dot = (cx: number, cy: number) => <circle cx={cx} cy={cy} r={0.9} fill="currentColor" stroke="none" />;
+const chartIcon = (
+  <>
+    <path d="M3 3v14h14" />
+    <polyline points="5,14 9,9 12,12 17,5" />
+  </>
+);
+const NODE_ICONS: Record<string, ReactNode> = {
+  client: (
+    <>
+      <rect x={1} y={3} width={18} height={14} rx={1.5} />
+      <line x1={1} y1={7} x2={19} y2={7} />
+      <polyline points="5,11 7.5,13 5,15" />
+      <line x1={10} y1={15} x2={14} y2={15} />
+    </>
+  ),
+  cloudflare: <path d="M6 15h8.5a3.2 3.2 0 0 0 .3-6.4 4.6 4.6 0 0 0-8.8-1A3.4 3.4 0 0 0 6 15z" />,
+  caddy: <path d="M10 2l7 2.6v5.2c0 4-3 6.6-7 7.9-4-1.3-7-3.9-7-7.9V4.6z" />,
+  api: (
+    <>
+      <rect x={2} y={3} width={16} height={6} rx={1} />
+      <rect x={2} y={11} width={16} height={6} rx={1} />
+      {dot(5.5, 6)}
+      {dot(5.5, 14)}
+    </>
+  ),
+  mediapipe: (
+    <>
+      <circle cx={10} cy={10} r={8} />
+      {dot(7, 8.5)}
+      {dot(13, 8.5)}
+      <path d="M10 9.5v3" />
+      <path d="M7.5 13.5c1.4 1.2 3.6 1.2 5 0" />
+    </>
+  ),
+  calculator: (
+    <>
+      <rect x={3} y={2} width={14} height={16} rx={1.5} />
+      <rect x={5.5} y={4.5} width={9} height={3} rx={0.5} />
+      {dot(7, 11)}
+      {dot(10, 11)}
+      {dot(13, 11)}
+      {dot(7, 14.5)}
+      {dot(10, 14.5)}
+      {dot(13, 14.5)}
+    </>
+  ),
+  response: (
+    <>
+      <path d="M8 3c-2 0-2.2 1.8-2.2 3.4 0 1.6-1 2.1-1.8 2.6.8.5 1.8 1 1.8 2.6 0 1.6.2 3.4 2.2 3.4" />
+      <path d="M12 3c2 0 2.2 1.8 2.2 3.4 0 1.6 1 2.1 1.8 2.6-.8.5-1.8 1-1.8 2.6 0 1.6-.2 3.4-2.2 3.4" />
+    </>
+  ),
+  node_exporter: chartIcon,
+  prometheus: chartIcon,
+  grafana: chartIcon,
+};
+
 const VIEWBOX_W = 720;
 const VIEWBOX_H = 634;
 
@@ -255,10 +315,16 @@ export default function ArchitectureDiagram() {
                     height={NODE_H}
                     rx={6}
                   />
-                  <text className="arch-node-kind" x={node.x + 14} y={node.y + 20}>
+                  <g
+                    className="arch-node-icon"
+                    transform={`translate(${node.x + 14} ${node.y + (NODE_H - 20) / 2})`}
+                  >
+                    {NODE_ICONS[node.id]}
+                  </g>
+                  <text className="arch-node-kind" x={node.x + 44} y={node.y + 20}>
                     {node.kind}
                   </text>
-                  <text className="arch-node-label" x={node.x + 14} y={node.y + 40}>
+                  <text className="arch-node-label" x={node.x + 44} y={node.y + 40}>
                     {node.label}
                   </text>
                 </g>

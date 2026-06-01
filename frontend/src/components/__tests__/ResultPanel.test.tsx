@@ -46,12 +46,15 @@ const sampleReferences: RatioReference[] = [
 ];
 
 describe("ResultPanel", () => {
-  it("shows placeholder content before any analysis", () => {
+  it("shows a guided empty state before any analysis", () => {
     render(
       <ResultPanel status={{ message: "Select an image", state: "idle" }} result={null} references={[]} />,
     );
     expect(screen.getByText("Awaiting analysis")).toBeInTheDocument();
-    expect(screen.getByText("None yet")).toBeInTheDocument();
+    expect(screen.getByText(/Upload a local image and run/)).toBeInTheDocument();
+    expect(screen.getByText("Canon bands")).toBeInTheDocument();
+    // The dash-filled placeholder sections are not rendered until there is a result.
+    expect(screen.queryByText("Model metadata")).not.toBeInTheDocument();
   });
 
   it("renders ratios, model metadata, and overlay summary from a response", () => {

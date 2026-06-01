@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --ink: oklch(23% 0.035 238);
   --muted: oklch(47% 0.04 238);
   --line: oklch(84% 0.025 228);
@@ -13,6 +13,33 @@
   --ok: oklch(48% 0.13 152);
   --shadow: 0 18px 55px color-mix(in oklch, var(--ink) 12%, transparent);
   font-family: "Aptos", "Segoe UI", sans-serif;
+}
+
+/* Dark theme: same hues, inverted lightness. Most surfaces are token-driven, so the
+   editorial blueprint look carries over; only a couple of hard-coded fills are overridden. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: oklch(93% 0.02 238);
+    --muted: oklch(72% 0.03 238);
+    --line: oklch(40% 0.02 228);
+    --paper: oklch(19% 0.015 238);
+    --panel: oklch(23% 0.014 238);
+    --panel-strong: oklch(28% 0.02 118);
+    --accent: oklch(72% 0.13 176);
+    --accent-ink: oklch(83% 0.1 176);
+    --warning: oklch(75% 0.13 62);
+    --danger: oklch(68% 0.17 28);
+    --ok: oklch(72% 0.13 152);
+    --shadow: 0 18px 55px color-mix(in oklch, black 55%, transparent);
+  }
+
+  .preview-frame {
+    background: oklch(26% 0.02 238);
+  }
+
+  .status-banner {
+    background: color-mix(in oklch, var(--panel) 60%, transparent);
+  }
 }
 
 * {
@@ -54,12 +81,22 @@ a {
 }
 
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   margin: 0 0 10px;
   color: var(--accent-ink);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 20px;
+  height: 3px;
+  background: var(--accent);
 }
 
 h1,
@@ -121,6 +158,7 @@ h1 {
 .upload-panel,
 .result-panel {
   border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
   background: color-mix(in oklch, var(--panel) 90%, transparent);
   box-shadow: var(--shadow);
 }
@@ -385,6 +423,52 @@ dd {
   border-top: 1px solid var(--line);
 }
 
+/* Guided empty state shown in the result panel before any analysis runs. */
+.result-empty {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: clamp(30px, 6vw, 60px) 20px;
+  text-align: center;
+  border: 1px dashed color-mix(in oklch, var(--accent) 45%, var(--line));
+  background: color-mix(in oklch, var(--panel-strong) 38%, var(--paper));
+}
+
+.result-empty svg {
+  width: 54px;
+  height: 54px;
+  color: var(--accent);
+}
+
+.result-empty .empty-title {
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.result-empty p {
+  max-width: 400px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.result-empty .empty-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.result-empty .empty-tags span {
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  background: color-mix(in oklch, var(--panel) 78%, transparent);
+  color: var(--accent-ink);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 /* Geometric ratios with classical-canon reference bands. */
 .ratio-readings {
   display: grid;
@@ -418,6 +502,8 @@ dd {
   margin: 0;
   font-weight: 900;
   text-align: right;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .ratio-ref {
@@ -531,6 +617,22 @@ dd {
   font-size: 13px;
   font-weight: 700;
   pointer-events: none;
+}
+
+.arch-node-icon {
+  fill: none;
+  stroke: var(--muted);
+  color: var(--muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+  transition: stroke 160ms ease, color 160ms ease;
+}
+
+.arch-node.active .arch-node-icon {
+  stroke: var(--accent-ink);
+  color: var(--accent-ink);
 }
 
 .arch-node-kind {
