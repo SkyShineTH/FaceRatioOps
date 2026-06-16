@@ -1,5 +1,5 @@
 # Stage 1: build the React (Vite) frontend into app/static_dist.
-FROM node:20-slim AS frontend-build
+FROM node:26-slim AS frontend-build
 
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
