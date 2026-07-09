@@ -123,13 +123,15 @@ For the latest local production Compose smoke-test evidence, see `docs/local-pro
 
 ## Deployment Readiness
 
-The current service is local/container-ready. The planned public deployment is a manual DigitalOcean deployment behind HTTPS at:
+The service was deployed on DigitalOcean behind HTTPS. The live environment was decommissioned on 2026-07-09. The deployment runbook is preserved in `docs/digitalocean-deployment.md` and the full stack is defined in Git.
+
+Former public URLs (no longer live):
 
 ```text
 https://faceratioops.skyshine.online/
 ```
 
-Expected public operational endpoints:
+Expected public operational endpoints (offline):
 
 ```text
 https://faceratioops.skyshine.online/health
@@ -138,7 +140,7 @@ https://faceratioops.skyshine.online/model-info
 https://faceratioops.skyshine.online/metrics
 ```
 
-Use `docs/digitalocean-deployment.md` as the manual deployment runbook. Do not enable automated deployment until the manual deployment, rollback path, and privacy checks have been verified.
+The live environment was deployed using `docs/digitalocean-deployment.md` as the manual deployment runbook. The environment was decommissioned on 2026-07-09 and can be redeployed from Git.
 
 Before exposing the API publicly, confirm:
 

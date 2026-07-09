@@ -1,8 +1,13 @@
 # Public Production Smoke Test
 
+> **Status — decommissioned 2026-07-09.** The live DigitalOcean demo that
+> passed these smoke checks is torn down. This evidence template captures
+> the verification steps and results from the running environment. The full
+> stack is defined in Git for redeployment.
+
 This document is the evidence template for the first public DigitalOcean deployment. Do not mark the service as publicly deployed in README, portfolio copy, or resume bullets until this checklist has real results.
 
-Target URL:
+Target URL (offline):
 
 ```text
 https://faceratioops.skyshine.online/

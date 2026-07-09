@@ -1,7 +1,9 @@
 # Screenshots
 
-UI screenshots of the public deployment at <https://faceratioops.skyshine.online/>,
-used in the project `README.md` and portfolio evidence.
+UI screenshots captured from the public deployment at
+`https://faceratioops.skyshine.online/` before the environment was
+decommissioned on 2026-07-09. Used in the project `README.md` and portfolio
+evidence.
 
 | File | Page |
 | --- | --- |

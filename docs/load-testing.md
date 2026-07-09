@@ -1,5 +1,9 @@
 # Load Testing
 
+> **Status — decommissioned 2026-07-09.** The live DigitalOcean demo that
+> these load tests targeted is torn down. The k6 scripts and thresholds
+> below remain valid for any redeployed instance.
+
 FaceRatioOps is load-tested with [k6](https://k6.io). The goal is capacity awareness on
 a small Droplet and validating the latency/availability SLOs in [`docs/slo.md`](slo.md)
 under realistic traffic — not synthetic vanity numbers.
