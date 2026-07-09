@@ -1,5 +1,10 @@
 # Portfolio Evidence Package
 
+> **Status — decommissioned 2026-07-09.** The live DigitalOcean demo
+> environment that generated this evidence is torn down. The captured
+> screenshots, smoke-test results, and operational data below document the
+> environment that ran. The full stack remains in Git for redeployment.
+
 Use this package after the public smoke test in `docs/public-production-smoke-test.md` has real passing evidence.
 
 ## Production Story
@@ -33,7 +38,7 @@ Grafana -> Prometheus datasource + FaceRatioOps and Node Exporter dashboards
 
 ## Evidence To Capture
 
-| Evidence | Source |
+| Evidence | Source (offline) |
 | --- | --- |
 | Public workbench without personal image content | `https://faceratioops.skyshine.online/` |
 | API docs | `https://faceratioops.skyshine.online/docs` |

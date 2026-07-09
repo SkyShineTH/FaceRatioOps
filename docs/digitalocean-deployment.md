@@ -1,14 +1,22 @@
 # DigitalOcean Manual Deployment Runbook
 
-This runbook prepares FaceRatioOps for a manual DigitalOcean deployment using Docker Compose and Caddy HTTPS. It is a docs-only deployment plan: it does not mean the service is already deployed.
+> **Status — decommissioned 2026-07-09.** The live Droplet environment was
+> deployed and validated on DigitalOcean, then torn down to control cost. The
+> Droplet, its Caddy reverse proxy, and the Docker Compose environment no
+> longer exist, so the URLs below are offline. This document is preserved as
+> the deployment runbook for the environment that ran; the full stack is
+> defined in Git and can be redeployed from the Compose files, Caddy config,
+> and CI/CD workflows in this repository.
 
-The target public URL is:
+This runbook prepared FaceRatioOps for a manual DigitalOcean deployment using Docker Compose and Caddy HTTPS. It was the deployment plan used to bring the service online.
+
+The target public URL was:
 
 ```text
 https://faceratioops.skyshine.online/
 ```
 
-Expected operational endpoints:
+Expected operational endpoints (offline):
 
 ```text
 https://faceratioops.skyshine.online/health
@@ -43,7 +51,7 @@ Default host-level choices:
 - DNS: `A` record for `faceratioops.skyshine.online` pointing to the Droplet public IPv4 address.
 - HTTPS: host-installed Caddy using `deploy/Caddyfile` and proxying to `127.0.0.1:8000`.
 - App runtime: `docker-compose.yml` plus `docker-compose.prod.yml`, pulling the prebuilt GHCR image by default.
-- Deployment trigger: manual SSH commands for the first production-style deployment.
+- Deployment trigger: manual SSH commands for the first production-style deployment (decommissioned).
 
 The repository's base Compose port mapping is intended for local development. The production override maps `127.0.0.1:8000:8000`; use it for public deployments so the API is reachable only through Caddy. Do not expose container port `8000` directly to the public internet.
 

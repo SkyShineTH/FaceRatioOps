@@ -44,7 +44,8 @@ Operations monitoring uses Prometheus to scrape API `/metrics`, Node Exporter to
 
 ## Screenshots
 
-Captured from the public deployment at <https://faceratioops.skyshine.online/>.
+Captured from the public deployment at <https://faceratioops.skyshine.online/>
+(decommissioned 2026-07-09).
 
 ### Inference workbench
 
@@ -69,11 +70,20 @@ The OpenAPI / Swagger UI at `/docs`.
 More screenshots and capture instructions are in
 [docs/screenshots/](docs/screenshots/README.md).
 
-## Project Status
+## Project Status (decommissioned)
 
-FaceRatioOps is publicly deployed as a production-style portfolio service on DigitalOcean with HTTPS, reverse proxying, container health checks, public operational endpoints, GitHub Actions deployment, rollback documentation, and monitoring evidence.
+> **Status:** The live DigitalOcean demo was decommissioned on 2026-07-09 to
+> control cloud cost. The Droplet, its Caddy reverse proxy, and the Docker
+> Compose environment have been torn down, so the public URLs below no longer
+> resolve. The smoke-test evidence, screenshots, and deployment documentation
+> remain as proof of the environment that ran, and the full stack is defined
+> in Git so it can be redeployed from the Compose files, Caddy config, and
+> CI/CD workflows in this repository.
+>
+> [decommission-notice/](decommission-notice/) contains the static page that
+> replaced the live workbench after decommissioning.
 
-Production URL:
+Former public URLs (no longer live):
 
 ```text
 https://faceratioops.skyshine.online/
@@ -83,9 +93,11 @@ https://faceratioops.skyshine.online/model-info
 https://faceratioops.skyshine.online/metrics
 ```
 
-Public smoke-test evidence is documented in [docs/public-production-smoke-test.md](docs/public-production-smoke-test.md). Deployment and rollback behavior is documented in [docs/deployment-workflow-and-rollback.md](docs/deployment-workflow-and-rollback.md).
+Public smoke-test evidence is captured in [docs/public-production-smoke-test.md](docs/public-production-smoke-test.md). Deployment and rollback behavior is documented in [docs/deployment-workflow-and-rollback.md](docs/deployment-workflow-and-rollback.md).
 
-The service originally supported a temporary 512 MB budget Droplet by pulling the prebuilt GHCR image instead of building on the server. The current production path uses the same pull-based deployment flow and can run monitoring after scaling the Droplet. See [docs/low-memory-droplet.md](docs/low-memory-droplet.md) for the budget-runtime path.
+The service was deployed as a production-style portfolio service on DigitalOcean with HTTPS, reverse proxying, container health checks, public operational endpoints, GitHub Actions deployment, rollback documentation, and monitoring evidence.
+
+The service originally supported a temporary 512 MB budget Droplet by pulling the prebuilt GHCR image instead of building on the server. The production path used the same pull-based deployment flow and could run monitoring after scaling the Droplet. See [docs/low-memory-droplet.md](docs/low-memory-droplet.md) for the budget-runtime path.
 
 ## Tech Stack
 
@@ -302,11 +314,11 @@ Unit tests are deterministic and do not require real face images or MediaPipe do
 Additional GitHub operations files:
 
 - `.github/workflows/publish-image.yml` builds and publishes the production image to GitHub Container Registry
-- `.github/workflows/deploy.yml` automatically deploys after the image publish workflow succeeds on `main`, with `workflow_dispatch` retained as a manual fallback
+- `.github/workflows/deploy.yml` automatically deploys after the image publish workflow succeeds on `main`, with `workflow_dispatch` retained as a manual fallback (decommissioned alongside the live environment on 2026-07-09)
 - `.github/workflows/codeql.yml` runs CodeQL analysis for Python
 - `.github/dependabot.yml` configures Dependabot version updates for Python, Docker, and GitHub Actions
 
-Production deployment connects to the Droplet over SSH, pulls `ghcr.io/skyshineth/faceratioops:main`, restarts the Compose stack without building on the Droplet, waits for `/health`, and runs local plus public smoke checks. Deployment, security, and public wording changes require human review before merge.
+Production deployment connected to the Droplet over SSH, pulled `ghcr.io/skyshineth/faceratioops:main`, restarted the Compose stack without building on the Droplet, waited for `/health`, and ran local plus public smoke checks. The Droplet and its resources were decommissioned on 2026-07-09.
 
 ## Privacy and Safety Boundaries
 
